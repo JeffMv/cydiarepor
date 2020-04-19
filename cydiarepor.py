@@ -138,6 +138,7 @@ def get_debs_from_cydiarepoURL(repoURL):
     else:
         raw_packages_string = raw_packages_data
     
+    raw_packages_string = raw_packages_string.decode()
     raw_packages_list = raw_packages_string.split("\n\n")
     
     repo_info = {"url":repoURL}
