@@ -3,9 +3,9 @@
 
 import requests
 #import wget
+import os
 import sys
-import shlex
-import optparse
+import argparse
 import gzip
 import io
 import bz2
@@ -196,19 +196,28 @@ def is_need_by_search_string(deb, contained_str):
     return False
 
 
-def download_deb_file(repo_url, deb):
+def download_deb_file(repo_url, deb, slug_subdir=True):
     deb_download_url = repo_url + "/./" + deb['Filename']
-    save_path = "./" + deb['Package'] + "_"+ deb['Version'] + ".deb"
+    print(f"deb_download_url: {deb_download_url}")
+    fname = deb['Package'] + "_"+ deb['Version'] + ".deb"    
+    # dest = "."
+    dest = "downloads"
+    dest = dest if slug_subdir else os.path.join(dest, get_repo_slugname(repo_url))
+    save_path = os.path.join(dest, fname)
     
     r = http_get(deb_download_url)
     deb_data = r.content
+    
+    os.makedirs(dest, exist_ok=True)
     with open(save_path, 'wb') as f:
         f.write(deb_data)
 #	wget.download(deb_download_url, save_path)
 
 def list_all_repo_deb(debs):
     print(("-"*(3+30+30+4)))
-    title = "Developed By xia0@2019 Blog:https://4ch12dy.site"
+    title = "Developed By xia0@2019 Blog: https://4ch12dy.site"
+    print(("|"+format(title,"^65")+"|"))
+    title = "  Improved by JeffMv : https://github.com/JeffMv"
     print(("|"+format(title,"^65")+"|"))
     
     print(("-"*(3+30+30+4)))
@@ -221,12 +230,11 @@ def list_all_repo_deb(debs):
         if (i+1) % 40 == 0:
             print(("|"+format(i,"<3")+"|" + format(debs[i]["Package"], "^30")+ "|" + format(debs[i]["Name"]+"("+debs[i]["Version"]+")", "^30") + "|"))
             print(("-"*(3+30+30+4)))
-            choice = eval(input("|" + "do you want to continue?[1/0]: "))
+            choice = input("|" + "do you want to continue?[Y/N]: ")
             print(("-"*(3+30+30+4)))
-            
-            if choice == 0:
+            if choice.lower() in ['n', 'N', '0']:
                 break
-            elif choice == 1:
+            elif choice.lower() in ['y', 'Y', '1']:
                 continue
             else:
                 print("[-] error choice")
@@ -247,50 +255,69 @@ def list_deb(debs):
         print(("|"+format(i,"<3")+"|" + format(debs[i]["Package"], "^30")+ "|" + format(debs[i]["Name"]+"("+debs[i]["Version"]+")", "^30") + "|" + format(debs[i]["repo"]["url"], "^30") + "|"))
     
     print(("-"*total_wid))
-    
-def generate_option_parser():
-    usage = "[usage]: cydiarepor [cydiarepo_url, -d] [-s <search_string>, -l]"
-    parser = optparse.OptionParser(usage=usage, prog="lookup")
 
-    parser.add_option("-l", "--list",
+
+def ArgParser():
+    usage = "[usage]: cydiarepor [-s <search_string>, --list] [cydiarepo_url, --defaultrepos]"
+    
+    prog = "lookup"
+    parser = argparse.ArgumentParser(prog=prog,
+        usage=usage,
+        description="""
+        """,
+        epilog=f"""
+        Usage examples:
+        
+        # lists the packages of the repo https://build.frida.re
+        $ {prog} -l https://build.frida.re
+        
+        # {prog} -s com.  https://build.frida.re
+        """
+        )
+
+    
+    parser.add_argument("cydiarepo_url", nargs="?", help="")
+
+    parser.add_argument("--listdeb", "-l", "--list",
+                        # dest="listdeb",
                         action="store_true",
-                        default=None,
-                        dest="listdeb",
                         help="list all deb package of cydia repo")
 
-    parser.add_option("-s", "--string",
-                action="store",
-                default=None,
+    parser.add_argument("--searchstring", "--search", "-s", "--string",
                 dest="searchstring",
                 help="search deb by string")
                 
-    parser.add_option("-d", "--default",
+    parser.add_argument("--defaultrepos", "-d", "--default",
+                # dest="defaultrepos",
                 action="store_true",
-                default=None,
-                dest="defaultrepos",
-                help="search deb by string in default repos")
+                help="Use default repos instead of a specific one")
                 
     return parser
 
-if __name__ == "__main__":			
+def ParsedArgumentsValidator(args):
+    if (args.listdeb or args.searchstring) and not (args.cydiarepo_url or args.defaultrepos):
+        parser.error("Repository required. Either use --defaultrepos or provide a url as <cydiarepo_url>")
+    
+    # if args.defaultrepos and not args.cydiarepo_url:
+    #     parser.error("--defaultrepos requires <cydiarepo_url>")
+    
+    return True
+
+
+if __name__ == "__main__":          
     cydiarepoURL = ''
-    parser = generate_option_parser()
-    
-    command_args = sys.argv[1:]
-    if len(command_args) == 0:
-        print((parser.usage))
-        exit(1)
-    
-    try:
-        (options, args) = parser.parse_args(command_args)
-    except:
-        print((parser.usage))
-        exit(1)
+    parser = ArgParser()
+    args = parser.parse_args()
+    valid = ParsedArgumentsValidator(args)
         
-    if options.defaultrepos:
-        if options.searchstring:
+    if len(sys.argv) <= 1:
+        print((parser.format_help()))
+        exit()
+    
+    if args.defaultrepos:
+        if args.searchstring:
             need_debs = []
-            search_string = options.searchstring
+            search_string = args.searchstring
 
             debs = get_debs_in_default_cydia_repo()
             for deb in debs:
@@ -309,18 +336,19 @@ if __name__ == "__main__":
             print("[+] download deb done")
             exit(0)
             
-        if options.listdeb:
-            all_defualt_debs = []
+        if args.listdeb:
+            all_default_debs = []
             
             for url in get_default_cydia_repo_array():
                 debs = get_debs_from_cydiarepoURL(url)
-                all_defualt_debs += debs
+                all_default_debs += debs
             
-            list_all_repo_deb(all_defualt_debs)
+            list_all_repo_deb(all_default_debs)
             exit(0)
         
-    if options.listdeb:
-        if len(args) != 1:
+    if args.listdeb:
+        cydiarepoURL = args.cydiarepo_url
+        if not cydiarepoURL:
             print((parser.usage))
             exit(1)
         cydiarepoURL = args[0]
@@ -328,14 +356,14 @@ if __name__ == "__main__":
         list_all_repo_deb(debs)
         exit(0)
 
-    if options.searchstring:
-        if len(args) != 1:
-            print((parser.usage))
+    if args.searchstring:
+        cydiarepoURL = args.cydiarepo_url
+        if not cydiarepoURL:
+            print((parser.format_help()))
             exit(1)
-        
+                
         need_debs = []
-        search_string = options.searchstring
-        cydiarepoURL = args[0]
+        search_string = args.searchstring
         debs = get_debs_from_cydiarepoURL(cydiarepoURL)
         for deb in debs:
             if is_need_by_search_string(deb, search_string):
@@ -354,4 +382,4 @@ if __name__ == "__main__":
         exit(0)
             
     print("[-] you can not reach here!!!")
-    
+
