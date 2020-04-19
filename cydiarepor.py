@@ -23,7 +23,7 @@ def get_default_cydia_repo_array():
     default_repos.append("https://xia0z.github.io")
     
     return default_repos
-    
+
     
 def handle_old_cydia_repo(url):
     parse_result = urllib.parse.urlparse(url)
@@ -211,7 +211,7 @@ def download_deb_file(repo_url, deb, slug_subdir=True):
     os.makedirs(dest, exist_ok=True)
     with open(save_path, 'wb') as f:
         f.write(deb_data)
-#	wget.download(deb_download_url, save_path)
+#   wget.download(deb_download_url, save_path)
 
 def list_all_repo_deb(debs):
     print(("-"*(3+30+30+4)))
@@ -351,7 +351,6 @@ if __name__ == "__main__":
         if not cydiarepoURL:
             print((parser.usage))
             exit(1)
-        cydiarepoURL = args[0]
         debs = get_debs_from_cydiarepoURL(cydiarepoURL)
         list_all_repo_deb(debs)
         exit(0)
