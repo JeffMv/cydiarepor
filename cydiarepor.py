@@ -12,7 +12,7 @@ import bz2
 import urllib.parse
 import json
 
-__version__ = "0.2.2.3"
+__version__ = "0.2.3.0"
 
 
 DEBUG_FLAG = 0
@@ -399,10 +399,17 @@ def list_deb(debs):
 ###########################################################
 ###     UI / Interactions
 
-def ui_cli_download_user_selected_debs(deb_infos, overwrite, slug_subdir):
+def ui_cli_download_user_selected_debs(deb_infos, overwrite, slug_subdir, preselection=None):
     list_deb(deb_infos)
     
-    desired_deb_indexes = input(">> input no(s). of deb files to download /or/ 'all' to download them all (can take time): ").strip()
+    # allows batch CLI without having to supervise
+    if preselection is None:
+        desired_deb_indexes = input(">> input no(s). of deb files to download /or/ 'all' to download them all (can take time): ").strip()
+    else:
+        desired_deb_indexes = preselection.strip()
+        print(f">> | no(s). of deb files to download [preselection]: {desired_deb_indexes}")
+    
+    
     if desired_deb_indexes.lower() == "all":
         positions = range(len(deb_infos))
     else:
@@ -492,6 +499,10 @@ def ArgParser():
                 action="store_true",
                 help="Force download and overwrite existing deb files")
     
+    parser.add_argument("--preselection", "--select",
+                help="Pre-selection for user choices when required.")
+    
+    
     parser.add_argument("--debug",
                 type=int, default=0,
                 help="DEBUG flag. Common people need not tangle with this.")
@@ -559,7 +570,7 @@ if __name__ == "__main__":
             else:
                 print("No invalid debs")
         else:
-            ui_cli_download_user_selected_debs(requested_debs, args.overwrite, not args.nosubdir)
+            ui_cli_download_user_selected_debs(requested_debs, args.overwrite, not args.nosubdir, args.preselection)
         # exit(0)
     
     elif args.defaultrepos:
