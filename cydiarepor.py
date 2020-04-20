@@ -12,7 +12,7 @@ import bz2
 import urllib.parse
 import json
 
-__version__ = "0.2.0.2"
+__version__ = "0.2.0.3"
 
 
 DEBUG_FLAG = 0
@@ -231,6 +231,11 @@ def get_debs_from_cydiarepoURL(repoURL):
     for raw_package_string in raw_packages_list:
         raw_deb_list = raw_package_string.split("\n")
         cur_deb = {}
+        
+        if DEBUG_FLAG:
+            print(f"{'='*60}\n>> raw_package_string\n{raw_package_string}")
+            print(f"{'-'*60}\nparsed package string\n{json.dumps(parse_raw_deb_info_string(raw_package_string), indent=2)}")
+        
         for raw_deb_str in raw_deb_list:
             deb_item = raw_deb_str.split(":")
 
@@ -342,6 +347,8 @@ def list_all_repo_deb(debs):
     print(("-"*(3+30+30+4)))
     
 def list_deb(debs):
+    _problematic_debs = []
+    
     com_item_wid = 30
     total_wid = 1+3+ (com_item_wid +1) *3 + 1
     
@@ -349,7 +356,11 @@ def list_deb(debs):
     print(("|"+format("N", "^3") + "|" + format("package", "^30")+"|"+format("name", "^30")+"|"+format("repo url", "^30")+"|"))
     print(("-"*total_wid))
     for i in range(len(debs)):
-        print(("|"+format(i,"<3")+"|" + format(debs[i]["Package"], "^30")+ "|" + format(debs[i]["Name"]+"("+debs[i]["Version"]+")", "^30") + "|" + format(debs[i]["repo"]["url"], "^30") + "|"))
+        try:
+            print(("|"+format(i,"<3")+"|" + format(debs[i]["Package"], "^30")+ "|" + format(debs[i]["Name"]+"("+debs[i]["Version"]+")", "^30") + "|" + format(debs[i]["repo"]["url"], "^30") + "|"))
+        except KeyError as err:
+            print(f"<> KeyError at {i}: {err}\n    deb infos: {debs[i]}")
+            _problematic_debs.append((i, debs[i]))
     
     print(("-"*total_wid))
 
