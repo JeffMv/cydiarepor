@@ -439,18 +439,24 @@ def ArgParser():
         Usage examples:
         
         # lists the packages of the repo https://build.frida.re
-        $ {prog} -l https://build.frida.re
+        $ {prog} --listdeb https://build.frida.re
+        # same as above, but prints only those containing "terminal"
+        $ {prog} --listdeb https://build.frida.re -s terminal
         
+        ## Download
         # search packages containing "terminal" in the single provided repos
         $ {prog} -s terminal  https://build.frida.re
         # same as above but searching also in all the default repos
-        $ {prog} -s terminal  https://build.frida.re -d
+        $ {prog} -s terminal  https://build.frida.re --defaultrepos
         
+        ## infos
         # prints default sources
-        $ {prog} -d
+        $ {prog} --defaultrepos
         
-        # 
-        $ {prog} --check https://build.frida.re
+        # Checks for invalid deb filenames among the search results yielded
+        # by the search term <some_term>.
+        # Note: the initial issue was fixed so this option is no more useful.
+        $ {prog} --check https://build.frida.re -s <some_term>
         """
         )
 
