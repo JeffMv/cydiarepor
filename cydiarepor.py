@@ -10,9 +10,12 @@ import gzip
 import io
 import bz2
 import urllib.parse
+import json
 
-__version__ = "0.2.0.0"
+__version__ = "0.2.0.2"
 
+
+DEBUG_FLAG = 0
 
 def try_int(value):
     try:
@@ -104,6 +107,60 @@ def unzip_data_to_string(data, unzip_type):
 def http_get(url):
     r = requests.get(url, stream=True)
     return r
+
+def parse_raw_deb_info_string(package_string):
+    '''
+    A package string looks like this:
+Package: com.ex.substitute
+Version: 0.0.13
+Architecture: iphoneos-arm
+Maintainer: Sam Bingner
+Installed-Size: 640
+Pre-Depends: coreutils-bin, dpkg (>=1.17.11)
+Depends: firmware (>= 8.0), cy+cpu.arm64, com.saurik.substrate.safemode, mobilesubstrate (=0.9.7033+dummy), uikittools (>=1.1.13-4), darwintools
+Conflicts: com.ex.libsubstitute, org.coolstar.tweakinject, science.xnu.substitute
+Replaces: com.ex.libsubstitute, org.coolstar.tweakinject
+Provides: com.ex.libsubstitute, mobilesubstrate
+Filename: debs/1443.00/com.ex.substitute_0.0.13_iphoneos-arm.deb
+Size: 41700
+MD5sum: bde1c679eda881d2dad2d314ade7c181
+SHA1: 506a96ef1c72ed67544919400676f325d5d1b428
+SHA256: 1e093c144e33bce9afa4eb5d20b6e72b1e5ffeb63f1e79815a3609c982ffe65a
+Section: System
+Priority: optional
+Description: Substrate substitute for code substitution
+Author: comex <comexk+da@gmail.com>
+Name: Substitute
+    '''
+    entries = package_string.split("\n")
+    keys = list(map(lambda x:x.split(":")[0], entries))
+    values = list(map(lambda x:":".join(x.split(":")[1:])[1:], entries))
+    
+    kv = {key:values[i] for i, key in enumerate(keys)}
+    orig = kv.copy()
+    # 
+    kv_list_entries = {key:[value_i.strip() for value_i in kv[key].split(",")] for key in kv if kv[key].count(",") > 0}
+    kv.update(kv_list_entries)
+    
+    # These keys must not be turned to arrays (comma not to interpret as different values of array)
+    keys_to_preserve_as_is = ["Description", "Package", "Version", "Filename", "Name"]
+    for a_key in keys_to_preserve_as_is:
+        kv[a_key] = orig.get(a_key, "")
+    
+    return kv
+
+
+def merge_on_empty_fields(base, tomerge):
+    """Utility to quickly fill empty or falsy field of $base with fields
+    of $tomerge 
+    """
+    has_merged_anything = False
+    for key in tomerge:
+        if not base.get(key):
+            base[key] = tomerge.get(key)
+            has_merged_anything = True
+    return has_merged_anything
+
 
 def get_debs_from_cydiarepoURL(repoURL):
 #    Package: com.archry.joker
@@ -310,16 +367,22 @@ def ui_cli_download_user_selected_debs(deb_infos, slug_subdir):
         positions = [try_int(pos) for pos in desired_deb_indexes.split(" ") if try_int(pos)]
     
     for num in positions:
-        # print(("[*] you chose {} deb:\"{}\"".format(num, deb_infos[num]['Name'])))
-        print(("[*] downloading deb at {}: {}".format(num, deb_infos[num]['Name'])))
+        target_deb = deb_infos[num]
         
-        cydiarepoURL = need_debs[num]["repo"]["url"]
+        # print(("[*] you chose {} deb:\"{}\"".format(num, target_deb['Name'])))
+        print(("[*] downloading deb at {}: {}".format(num, target_deb['Name'])))
         
-        import code
-        code.interact()
+        cydiarepoURL = deb_infos[num]["repo"]["url"]
         
-        download_deb_file(cydiarepoURL, deb_infos[num], slug_subdir)
-        print("[+] download deb done")
+        if is_empty_deb_file_url(cydiarepoURL, target_deb):
+            print(f"    Empty url for deb {target_deb['Name']}:\n    {target_deb}\n")
+            if DEBUG_FLAG >= 2:
+                import code
+                code.interact()
+            pass
+        else:
+            download_deb_file(cydiarepoURL, target_deb, slug_subdir)
+            print("[+] download deb done")
     pass
 
 ###########################################################
@@ -339,7 +402,13 @@ def ArgParser():
         # lists the packages of the repo https://build.frida.re
         $ {prog} -l https://build.frida.re
         
-        # {prog} -s com.  https://build.frida.re
+        # search packages containing "terminal" in the single provided repos
+        $ {prog} -s terminal  https://build.frida.re
+        # same as above but searching also in all the default repos
+        $ {prog} -s terminal  https://build.frida.re -d
+        
+        # prints default sources
+        $ {prog} -d
         """
         )
 
@@ -360,13 +429,17 @@ def ArgParser():
                 action="store_true",
                 help="Use default repos instead of a specific one")
     
-    parser.add_argument("--printSources", "--sources",
+    parser.add_argument("--checkpackageuri", "--check",
                 action="store_true",
                 help="Prints default repo sources")
     
     parser.add_argument("--nosubdir", "--toroot", "-r",
                 action="store_true",
                 help="Place downloaded debs in the root download folder instead of sub directories")
+    
+    parser.add_argument("--debug",
+                type=int, default=0,
+                help="DEBUG flag. Common people need not tangle with this.")
     
     return parser
 
@@ -384,6 +457,7 @@ if __name__ == "__main__":
     cydiarepoURL = ''
     parser = ArgParser()
     args = parser.parse_args()
+    DEBUG_FLAG = args.debug
     valid = ParsedArgumentsValidator(args)
         
     if len(sys.argv) <= 1:
@@ -429,5 +503,6 @@ if __name__ == "__main__":
         # the user wants to print the default sources since no main action
         tmp = "".join(list(map(lambda x: f"\n  - {x}", repos)))
         print(f"Repositories:{tmp}")
+    
     else:
         print("[-] you can not reach here!!!")
