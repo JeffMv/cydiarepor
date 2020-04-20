@@ -12,7 +12,7 @@ import bz2
 import urllib.parse
 import json
 
-__version__ = "0.2.3.0"
+__version__ = "0.2.3.1"
 
 
 DEBUG_FLAG = 0
@@ -166,23 +166,7 @@ def is_malformed_deb_infos(deb):
     return len(valid_fields) == 0
 
 
-def get_debs_from_cydiarepoURL(repoURL):
-#    Package: com.archry.joker
-#    Version: 1.0.30-1+debug
-#    Architecture: iphoneos-arm
-#    Installed-Size: 588
-#    Depends: mobilesubstrate
-#    Filename: ./debs/com.archry.joker.deb.deb
-#    Size: 117922
-#    MD5sum: c5d30e1b10177190ee56eecf5dbb5cfe
-#    SHA1: 377d5c59926083b2acdd95028abe24edfeba6141
-#    SHA256: fcb97af34c56d4a2bd67540df0427cb0cbd9b68e4c4e78f555265c3db1e2b67e
-#    Section: Hack
-#    Description: Archery king hack winde , zoom  and better Aiming
-#    Author: @Kgfunn
-#    Depiction: https://joker2gun.github.io/depictions/?p=com.archry.joker
-#    Name: Archery King Hack
-    
+def get_packages_file_from_cydiarepoURL(repoURL):
     cydiarepo_Packages_URL = repoURL + '/Packages'
     cydiarepo_Packages_bz2_URL = repoURL + '/Packages.bz2'
     cydiarepo_Packages_gz_URL = repoURL + '/Packages.gz'
@@ -220,6 +204,13 @@ def get_debs_from_cydiarepoURL(repoURL):
     resp = requests.get(cydiarepo_reachable_URL)
     
     raw_packages_data = resp.content
+    return raw_packages_data, is_need_unzip, unzip_type, cydiarepo_reachable_URL
+
+
+def get_raw_packages_list_from_cydiarepoURL(repoURL):
+    tmp = get_packages_file_from_cydiarepoURL(repoURL)
+    raw_packages_data, is_need_unzip, unzip_type, cydiarepo_reachable_URL = tmp
+    
     raw_packages_string = ""
     
     if is_need_unzip:
@@ -233,6 +224,26 @@ def get_debs_from_cydiarepoURL(repoURL):
         raw_packages_string = raw_packages_string.decode(encoding=resp.encoding)
     
     raw_packages_list = raw_packages_string.split("\n\n")
+    return raw_packages_list
+
+
+def get_debs_from_cydiarepoURL(repoURL):
+#    Package: com.archry.joker
+#    Version: 1.0.30-1+debug
+#    Architecture: iphoneos-arm
+#    Installed-Size: 588
+#    Depends: mobilesubstrate
+#    Filename: ./debs/com.archry.joker.deb.deb
+#    Size: 117922
+#    MD5sum: c5d30e1b10177190ee56eecf5dbb5cfe
+#    SHA1: 377d5c59926083b2acdd95028abe24edfeba6141
+#    SHA256: fcb97af34c56d4a2bd67540df0427cb0cbd9b68e4c4e78f555265c3db1e2b67e
+#    Section: Hack
+#    Description: Archery king hack winde , zoom  and better Aiming
+#    Author: @Kgfunn
+#    Depiction: https://joker2gun.github.io/depictions/?p=com.archry.joker
+#    Name: Archery King Hack
+    raw_packages_list = get_raw_packages_list_from_cydiarepoURL(repoURL)
     
     repo_info = {"url":repoURL}
     k_need_item_array = ["Package", "Version", "Filename", "Name", "Description"]
