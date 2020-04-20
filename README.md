@@ -53,4 +53,14 @@ here is the default cydia repo :
 
 try `python cydiarepor.py -d -l` or `python cydiarepor.py -d -s "Frida"`
 
+
+#### Compatibility
+
+The original work by [xia0@2019](https://4ch12dy.site) was using Python2.
+See the original repo [here](https://github.com/4ch12dy/cydiarepor).
+
+It has been update to use Python `3.6`. (It would be possible to make 
+compatible with lower versions than `3.6` with a little more dev time though).
+
+
 #### Enjoy it~
