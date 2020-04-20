@@ -12,7 +12,7 @@ import bz2
 import urllib.parse
 import json
 
-__version__ = "0.2.2.1"
+__version__ = "0.2.2.2"
 
 
 DEBUG_FLAG = 0
@@ -274,8 +274,7 @@ def get_debs_from_cydiarepoURL(repoURL):
         # codebase
         did_merge = merge_on_empty_fields(cur_deb, reference_info_deb)
         
-        
-        if cur_deb:
+        if cur_deb and not is_malformed_deb_infos(cur_deb):
             all_deb.append(cur_deb)
     
     return all_deb
@@ -324,7 +323,7 @@ def download_deb_file(repo_url, deb, overwrite=False, slug_subdir=True):
     :return: whether the resource was fetched
     """
     deb_download_url = repo_url + "/./" + deb['Filename']
-    print(f"    deb url: {deb_download_url}")
+    print(f"    {deb_download_url}")
     fname = deb['Package'] + "_"+ deb['Version'] + ".deb"    
     # dest = "."
     dest = "downloads"
@@ -399,7 +398,7 @@ def list_deb(debs):
 def ui_cli_download_user_selected_debs(deb_infos, overwrite, slug_subdir):
     list_deb(deb_infos)
     
-    desired_deb_indexes = input(">> input numbers of deb files you want to download, or 'all' to download them all (can take time): ").strip()
+    desired_deb_indexes = input(">> input no(s). of deb files to download /or/ 'all' to download them all (can take time): ").strip()
     if desired_deb_indexes.lower() == "all":
         positions = range(len(deb_infos))
     else:
@@ -545,7 +544,7 @@ if __name__ == "__main__":
         
         debs = get_debs_in_cydia_repos(repos)
         for deb in debs:
-            if is_need_by_search_string(deb, args.searchstring) and not is_malformed_deb_infos(deb):
+            if is_need_by_search_string(deb, args.searchstring):  # and not is_malformed_deb_infos(deb):
                 requested_debs.append(deb)
         
         if args.checkpackageuri and args.cydiarepo_url:

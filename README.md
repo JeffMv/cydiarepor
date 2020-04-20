@@ -30,7 +30,7 @@ xia0 ~ $ python cydiarepor.py https://xia0z.github.io -s "fk"
 |1  |     com.xia0.fkwatermark     |         fkwatermark          |
 |2  |     com.xia0.fkwechatzan     |         fkwechatzan          |
 -------------------------------------------------------------------
->> inout number of deb want to download:0
+>> input number of deb want to download:0
 [*] you choose 0 deb:"fkiqyad"
 [*] start to download:fkiqyad
 [+] download deb done
