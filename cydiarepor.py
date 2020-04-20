@@ -12,7 +12,7 @@ import bz2
 import urllib.parse
 import json
 
-__version__ = "0.2.0.5"
+__version__ = "0.2.1.0"
 
 
 DEBUG_FLAG = 0
@@ -233,7 +233,13 @@ def get_debs_from_cydiarepoURL(repoURL):
         raw_deb_list = raw_package_string.split("\n")
         cur_deb = {}
         
-        if DEBUG_FLAG:
+        ## This helper parser `parse_raw_deb_info_string` was added after the
+        ## original codebase in order not to mess up previous things, the
+        ## original codebase is used, and this will be added on top to patch
+        ## things that often have caused issues during further testing
+        reference_info_deb = parse_raw_deb_info_string(raw_package_string)
+        
+        if DEBUG_FLAG >= 2:
             print(f"{'='*60}\n>> raw_package_string\n{raw_package_string}")
             print(f"{'-'*60}\nparsed package string\n{json.dumps(parse_raw_deb_info_string(raw_package_string), indent=2)}")
         
@@ -254,7 +260,16 @@ def get_debs_from_cydiarepoURL(repoURL):
                     cur_deb[k] = ""
             
             cur_deb["repo"]=repo_info
-
+        
+        
+        ## using new codebase's utility's parsing result since the original
+        ## codebase produced inconsistencies and errors
+        cur_deb["Filename"] = cur_deb.get("Filename", reference_info_deb.get("Filename", ""))
+        # actually not required at time of writing, but provides extra
+        # information and may help prevent parsing errors made by the original
+        # codebase
+        did_merge = merge_on_empty_fields(cur_deb, reference_info_deb)
+        
         if cur_deb:
             all_deb.append(cur_deb)
     
