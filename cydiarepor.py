@@ -227,6 +227,7 @@ def get_debs_from_cydiarepoURL(repoURL):
     raw_packages_list = raw_packages_string.split("\n\n")
     
     repo_info = {"url":repoURL}
+    k_need_item_array = ["Package", "Version", "Filename", "Name", "Description"]
     all_deb = []
     for raw_package_string in raw_packages_list:
         raw_deb_list = raw_package_string.split("\n")
@@ -244,7 +245,7 @@ def get_debs_from_cydiarepoURL(repoURL):
             deb_item_k = deb_item[0].strip()
             deb_item_v = deb_item[1].strip()
             
-            need_item_array = ["Package", "Version", "Filename", "Name", "Description"]
+            need_item_array = k_need_item_array
             if deb_item_k in need_item_array:
                 cur_deb[deb_item_k] = deb_item_v
             
