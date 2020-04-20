@@ -12,7 +12,7 @@ import bz2
 import urllib.parse
 import json
 
-__version__ = "0.2.2.2"
+__version__ = "0.2.2.3"
 
 
 DEBUG_FLAG = 0
@@ -227,7 +227,11 @@ def get_debs_from_cydiarepoURL(repoURL):
     else:
         raw_packages_string = raw_packages_data
     
-    raw_packages_string = raw_packages_string.decode()
+    try:
+        raw_packages_string = raw_packages_string.decode()
+    except:
+        raw_packages_string = raw_packages_string.decode(encoding=resp.encoding)
+    
     raw_packages_list = raw_packages_string.split("\n\n")
     
     repo_info = {"url":repoURL}
