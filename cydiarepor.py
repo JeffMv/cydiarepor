@@ -12,7 +12,7 @@ import bz2
 import urllib.parse
 import json
 
-__version__ = "0.2.0.3"
+__version__ = "0.2.0.5"
 
 
 DEBUG_FLAG = 0
@@ -420,6 +420,9 @@ def ArgParser():
         
         # prints default sources
         $ {prog} -d
+        
+        # 
+        $ {prog} --check https://build.frida.re
         """
         )
 
@@ -500,14 +503,22 @@ if __name__ == "__main__":
         # exit(0)
     
     elif args.searchstring is not None:
-        need_debs = []
+        requested_debs = []
         
         debs = get_debs_in_cydia_repos(repos)
         for deb in debs:
             if is_need_by_search_string(deb, args.searchstring):
-                need_debs.append(deb)
+                requested_debs.append(deb)
         
-        ui_cli_download_user_selected_debs(need_debs, not args.nosubdir)
+        if args.checkpackageuri and args.cydiarepo_url:
+            # only check invalid urls
+            invalid_debs = [target_deb for target_deb in requested_debs if is_empty_deb_file_url(args.cydiarepo_url, target_deb)]
+            if invalid_debs:
+                print(f"\n\n{'-' * 60}\n\n".join(map(lambda x:json.dumps(x, indent=2), invalid_debs)))
+            else:
+                print("No invalid debs")
+        else:
+            ui_cli_download_user_selected_debs(requested_debs, not args.nosubdir)
         # exit(0)
     
     elif args.defaultrepos:
