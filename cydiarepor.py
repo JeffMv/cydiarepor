@@ -12,7 +12,7 @@ import bz2
 import urllib.parse
 import json
 
-__version__ = "0.2.2.0"
+__version__ = "0.2.2.1"
 
 
 DEBUG_FLAG = 0
@@ -160,6 +160,10 @@ def merge_on_empty_fields(base, tomerge):
             base[key] = tomerge.get(key)
             has_merged_anything = True
     return has_merged_anything
+
+def is_malformed_deb_infos(deb):
+    valid_fields = [key for key in deb if len(key) > 0 and len(deb[key]) > 0]
+    return len(valid_fields) == 0
 
 
 def get_debs_from_cydiarepoURL(repoURL):
@@ -393,11 +397,7 @@ def list_deb(debs):
 ###     UI / Interactions
 
 def ui_cli_download_user_selected_debs(deb_infos, overwrite, slug_subdir):
-    try:
-        list_deb(deb_infos)
-    except KeyError as err:
-        print(f"  error with key. error: {err}")
-        # list_all_repo_deb(deb_infos)
+    list_deb(deb_infos)
     
     desired_deb_indexes = input(">> input numbers of deb files you want to download, or 'all' to download them all (can take time): ").strip()
     if desired_deb_indexes.lower() == "all":
@@ -539,7 +539,7 @@ if __name__ == "__main__":
         
         debs = get_debs_in_cydia_repos(repos)
         for deb in debs:
-            if is_need_by_search_string(deb, args.searchstring):
+            if is_need_by_search_string(deb, args.searchstring) and not is_malformed_deb_infos(deb):
                 requested_debs.append(deb)
         
         if args.checkpackageuri and args.cydiarepo_url:
