@@ -12,7 +12,7 @@ import bz2
 import urllib.parse
 import json
 
-__version__ = "0.2.1.0"
+__version__ = "0.2.2.0"
 
 
 DEBUG_FLAG = 0
@@ -270,6 +270,7 @@ def get_debs_from_cydiarepoURL(repoURL):
         # codebase
         did_merge = merge_on_empty_fields(cur_deb, reference_info_deb)
         
+        
         if cur_deb:
             all_deb.append(cur_deb)
     
@@ -314,7 +315,10 @@ def is_empty_deb_file_url(repo_url, deb):
     return url == repo_url + "/./"
 
 
-def download_deb_file(repo_url, deb, slug_subdir=True):
+def download_deb_file(repo_url, deb, overwrite=False, slug_subdir=True):
+    """
+    :return: whether the resource was fetched
+    """
     deb_download_url = repo_url + "/./" + deb['Filename']
     print(f"    deb url: {deb_download_url}")
     fname = deb['Package'] + "_"+ deb['Version'] + ".deb"    
@@ -323,13 +327,17 @@ def download_deb_file(repo_url, deb, slug_subdir=True):
     dest = os.path.join(dest, get_repo_slugname(repo_url)) if slug_subdir else dest
     save_path = os.path.join(dest, fname)
     
-    r = http_get(deb_download_url)
-    deb_data = r.content
-    
-    os.makedirs(dest, exist_ok=True)
-    with open(save_path, 'wb') as f:
-        f.write(deb_data)
-#   wget.download(deb_download_url, save_path)
+    if overwrite or not os.path.exists(save_path):
+        r = http_get(deb_download_url)
+        deb_data = r.content
+        
+        os.makedirs(dest, exist_ok=True)
+        with open(save_path, 'wb') as f:
+            f.write(deb_data)
+#       wget.download(deb_download_url, save_path)
+        return False
+    else:
+        return True
 
 def list_all_repo_deb(debs):
     print(("-"*(3+30+30+4)))
@@ -384,8 +392,12 @@ def list_deb(debs):
 ###########################################################
 ###     UI / Interactions
 
-def ui_cli_download_user_selected_debs(deb_infos, slug_subdir):
-    list_deb(deb_infos)
+def ui_cli_download_user_selected_debs(deb_infos, overwrite, slug_subdir):
+    try:
+        list_deb(deb_infos)
+    except KeyError as err:
+        print(f"  error with key. error: {err}")
+        # list_all_repo_deb(deb_infos)
     
     desired_deb_indexes = input(">> input numbers of deb files you want to download, or 'all' to download them all (can take time): ").strip()
     if desired_deb_indexes.lower() == "all":
@@ -408,7 +420,7 @@ def ui_cli_download_user_selected_debs(deb_infos, slug_subdir):
                 code.interact()
             pass
         else:
-            download_deb_file(cydiarepoURL, target_deb, slug_subdir)
+            download_deb_file(cydiarepoURL, target_deb, overwrite, slug_subdir)
             print("[+] download deb done")
     pass
 
@@ -466,6 +478,10 @@ def ArgParser():
     parser.add_argument("--nosubdir", "--toroot", "-r",
                 action="store_true",
                 help="Place downloaded debs in the root download folder instead of sub directories")
+    
+    parser.add_argument("--overwrite", "-o",
+                action="store_true",
+                help="Force download and overwrite existing deb files")
     
     parser.add_argument("--debug",
                 type=int, default=0,
@@ -534,7 +550,7 @@ if __name__ == "__main__":
             else:
                 print("No invalid debs")
         else:
-            ui_cli_download_user_selected_debs(requested_debs, not args.nosubdir)
+            ui_cli_download_user_selected_debs(requested_debs, args.overwrite, not args.nosubdir)
         # exit(0)
     
     elif args.defaultrepos:
