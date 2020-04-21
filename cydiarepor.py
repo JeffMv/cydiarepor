@@ -485,6 +485,7 @@ def ui_cli_download_user_selected_debs(deb_infos, overwrite, slug_subdir, presel
     
     if desired_deb_indexes.lower() == "all":
         positions = range(len(deb_infos))
+        print(f"Going to download all {len(deb_infos)} deb files")
     else:
         positions = [try_int(pos) for pos in desired_deb_indexes.split(" ") if try_int(pos)]
     
@@ -545,23 +546,23 @@ def ArgParser():
 
     
     parser.add_argument("cydiarepo_url", nargs="?", help="")
-
-    parser.add_argument("--listdeb", "-l", "--list",
+    
     commands_group = parser.add_argument_group("Commands")
+    commands_group.add_argument("--listdeb", "-l", "--list",
                         # dest="listdeb",
                         action="store_true",
                         help="list all deb package of cydia repo")
 
-    parser.add_argument("--searchstring", "--search", "-s", "--string",
+    commands_group.add_argument("--searchstring", "--search", "-s", "--string",
                 dest="searchstring",
                 help="search deb by string. You can also pass the empty string '' to filter with the empty string.")
                 
-    parser.add_argument("--defaultrepos", "-d", "--default",
+    commands_group.add_argument("--defaultrepos", "-d", "--default",
                 # dest="defaultrepos",
                 action="store_true",
                 help="Use default repos instead of a specific one")
     
-    parser.add_argument("--checkpackageuri", "--check",
+    commands_group.add_argument("--checkpackageuri", "--check",
                 action="store_true",
                 help="Prints default repo sources")
     
