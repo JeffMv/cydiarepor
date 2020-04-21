@@ -54,6 +54,24 @@ here is the default cydia repo :
 try `python cydiarepor.py -d -l` or `python cydiarepor.py -d -s "Frida"`
 
 
+#### Roadmap
+
+**Done**
+
+- [X] Listing deb files of several repositories
+- [X] Searching for specific packages
+- [X] Batch download of deb files
+
+**To do**
+
+- [ ] Source management (caching of repo packages and loading)
+    - [X] Adding a new source
+    - [X] Updating one source at a time
+    - [ ] Updating all sources at once
+    - [X] Saving downloaded package files
+    - [ ] Searching from the cached sources
+
+
 #### Compatibility
 
 The original work by [xia0@2019](https://4ch12dy.site) was using Python2.

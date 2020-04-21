@@ -12,10 +12,11 @@ import bz2
 import urllib.parse
 import json
 
-__version__ = "0.2.3.2"
+__version__ = "0.2.4.0"
 
 
 DEBUG_FLAG = 0
+SOURCES_DIRECTORY = "sources"
 
 def try_int(value):
     try:
@@ -214,9 +215,14 @@ def is_malformed_deb_infos(deb):
 
 
 def get_packages_file_from_cydiarepoURL(repoURL):
+    # cydiarepo_Packages_URL = repoURL + '/Packages'
+    # cydiarepo_Packages_bz2_URL = repoURL + '/Packages.bz2'
+    # cydiarepo_Packages_gz_URL = repoURL + '/Packages.gz'
+    # print(f"cydiarepo_Packages_URL: {cydiarepo_Packages_URL}")
     cydiarepo_Packages_URL = join_url_path_components(repoURL, '/Packages')
     cydiarepo_Packages_bz2_URL = join_url_path_components(repoURL, '/Packages.bz2')
     cydiarepo_Packages_gz_URL = join_url_path_components(repoURL, '/Packages.gz')
+    # print(f"cydiarepo_Packages_URL: {cydiarepo_Packages_URL}")
     
     if handle_old_cydia_repo(repoURL):
         ret = handle_old_cydia_repo(repoURL)
@@ -251,26 +257,35 @@ def get_packages_file_from_cydiarepoURL(repoURL):
     resp = requests.get(cydiarepo_reachable_URL)
     
     raw_packages_data = resp.content
-    return raw_packages_data, is_need_unzip, unzip_type, cydiarepo_reachable_URL
+    return raw_packages_data, is_need_unzip, unzip_type, cydiarepo_reachable_URL, resp.encoding
+
+
+def get_raw_unarchived_packages_file_from_cydiarepoURL(repoURL):
+    tmp = get_packages_file_from_cydiarepoURL(repoURL)
+    raw_packages_data, is_need_unzip, unzip_type, cydiarepo_reachable_URL = tmp[:4]
+    encoding = tmp[4]
+        
+    if is_need_unzip:
+        raw_packages_unarchived = unzip_data_to_string(raw_packages_data, unzip_type)
+    else:
+        raw_packages_unarchived = raw_packages_data
+    
+    return raw_packages_unarchived, cydiarepo_reachable_URL, encoding
 
 
 def get_raw_packages_list_from_cydiarepoURL(repoURL):
-    tmp = get_packages_file_from_cydiarepoURL(repoURL)
-    raw_packages_data, is_need_unzip, unzip_type, cydiarepo_reachable_URL = tmp
-    
-    raw_packages_string = ""
-    
-    if is_need_unzip:
-        raw_packages_string = unzip_data_to_string(raw_packages_data, unzip_type)
-    else:
-        raw_packages_string = raw_packages_data
+    raw_packages_unarchived, _, encoding = get_raw_unarchived_packages_file_from_cydiarepoURL(repoURL)
     
     try:
-        raw_packages_string = raw_packages_string.decode()
+        raw_packages_string = raw_packages_unarchived.decode()
     except:
-        raw_packages_string = raw_packages_string.decode(encoding=resp.encoding)
+        raw_packages_string = raw_packages_unarchived.decode(encoding=encoding)
     
     raw_packages_list = raw_packages_string.split("\n\n")
+    return raw_packages_list
+
+def extract_raw_packages_list_from_content(content):
+    raw_packages_list = content.split("\n\n")
     return raw_packages_list
 
 
@@ -532,6 +547,7 @@ def ArgParser():
     parser.add_argument("cydiarepo_url", nargs="?", help="")
 
     parser.add_argument("--listdeb", "-l", "--list",
+    commands_group = parser.add_argument_group("Commands")
                         # dest="listdeb",
                         action="store_true",
                         help="list all deb package of cydia repo")
@@ -549,6 +565,12 @@ def ArgParser():
                 action="store_true",
                 help="Prints default repo sources")
     
+    commands_group.add_argument("--addSource", "--updateSource"
+                dest="saveSource",
+                action="store_true",
+                help="Add or update repository source. It will cache the repo")
+    
+    #
     parser.add_argument("--nosubdir", "--toroot", "-r",
                 action="store_true",
                 help="Place downloaded debs in the root download folder instead of sub directories")
@@ -594,7 +616,31 @@ if __name__ == "__main__":
     assert len(repos) >= 1, f"You should either provide a repo or use the default repos options"
     
     
-    if args.listdeb:
+    if args.saveSource:
+        url = args.cydiarepo_url
+        tmp = get_raw_unarchived_packages_file_from_cydiarepoURL(url)
+        raw_packages_unarchived, package_file_url, encoding = tmp
+        try:
+            content = raw_packages_unarchived.decode()
+        except:
+            content = raw_packages_unarchived.decode(encoding=encoding)
+        
+        package_fn = package_file_url.split("/")[-1].split("?")[0]
+        
+        slugname = get_repo_slugname(url)
+        filepath = os.path.join(SOURCES_DIRECTORY, f"{slugname}.Packages")
+        
+        packages = extract_raw_packages_list_from_content(content)
+        packages = list(filter(lambda p: len(p.strip()) > 0, packages))
+        assert len(packages) >= 1, "The repo has no package. Please ensure it is configured correctly."
+        
+        os.makedirs(os.path.dirname(filepath), exist_ok=True)
+        with open(filepath, "w") as fh:
+            fh.write(content)
+        
+        print(f"Saved the source file for {url} ({len(packages)} packages in the repo).")
+        
+    elif args.listdeb:
         all_repo_debs = []
         
         for url in repos:
