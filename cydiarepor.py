@@ -12,7 +12,7 @@ import bz2
 import urllib.parse
 import json
 
-__version__ = "0.2.4.1"
+__version__ = "0.2.4.2"
 
 
 DEBUG_FLAG = 0
@@ -625,25 +625,34 @@ if __name__ == "__main__":
         url = args.cydiarepo_url
         tmp = get_raw_unarchived_packages_file_from_cydiarepoURL(url)
         raw_packages_unarchived, package_file_url, encoding = tmp
-        try:
-            content = raw_packages_unarchived.decode()
-        except:
-            content = raw_packages_unarchived.decode(encoding=encoding)
-        
-        package_fn = package_file_url.split("/")[-1].split("?")[0]
         
         slugname = get_repo_slugname(url)
         filepath = os.path.join(SOURCES_DIRECTORY, f"{slugname}.Packages")
-        
-        packages = extract_raw_packages_list_from_content(content)
-        packages = list(filter(lambda p: len(p.strip()) > 0, packages))
-        assert len(packages) >= 1, "The repo has no package. Please ensure it is configured correctly."
-        
         os.makedirs(os.path.dirname(filepath), exist_ok=True)
-        with open(filepath, "w") as fh:
-            fh.write(content)
+        packages_count = '?'
+        try:
+            if encoding:
+                raw_packages_unarchived = raw_packages_unarchived.decode(encoding=encoding)
+            else:
+                raw_packages_unarchived = raw_packages_unarchived.decode()
+            
+            with open(filepath, "w") as fh:
+                fh.write(raw_packages_unarchived)
+            
+        except UnicodeDecodeError:
+            # better caching something even if it can't be decoded than nothing
+            with open(filepath, "wb") as fh:
+                fh.write(raw_packages_unarchived)
+            print(f"  Encoding of repo {url} could not be found. Saving as is...")
+        else:
+            packages = extract_raw_packages_list_from_content(raw_packages_unarchived)
+            packages = list(filter(lambda p: len(p.strip()) > 0, packages))
+            packages_count = len(packages)
+            if len(packages) == 0:
+                print(f"  The repo {slugname} has no package. Please ensure it is configured correctly.")
+        finally:
+            print(f"  Saved the source file for {url} ({packages_count} packages in the repo).")
         
-        print(f"Saved the source file for {url} ({len(packages)} packages in the repo).")
         
     elif args.listdeb:
         all_repo_debs = []
