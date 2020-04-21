@@ -566,7 +566,7 @@ def ArgParser():
                 action="store_true",
                 help="Prints default repo sources")
     
-    commands_group.add_argument("--addSource", "--updateSource"
+    commands_group.add_argument("--addSource", "--updateSource",
                 dest="saveSource",
                 action="store_true",
                 help="Add or update repository source. It will cache the repo")
