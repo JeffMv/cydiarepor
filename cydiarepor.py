@@ -12,7 +12,7 @@ import bz2
 import urllib.parse
 import json
 
-__version__ = "0.2.4.0"
+__version__ = "0.2.4.1"
 
 
 DEBUG_FLAG = 0
@@ -141,7 +141,11 @@ def is_url_reachable(url):
 def unzip_data_to_string(data, unzip_type):
     unzip_string = ""
     if unzip_type == "gz":
-        compressedstream = io.StringIO(data)
+        if isinstance(data, bytes):
+            compressedstream = io.BytesIO(data)
+        else:
+            compressedstream = io.StringIO(data)
+        
         gziper = gzip.GzipFile(fileobj=compressedstream)
         unzip_string = gziper.read()
     elif unzip_type == "bz2":
@@ -276,10 +280,10 @@ def get_raw_unarchived_packages_file_from_cydiarepoURL(repoURL):
 def get_raw_packages_list_from_cydiarepoURL(repoURL):
     raw_packages_unarchived, _, encoding = get_raw_unarchived_packages_file_from_cydiarepoURL(repoURL)
     
-    try:
-        raw_packages_string = raw_packages_unarchived.decode()
-    except:
+    if encoding:
         raw_packages_string = raw_packages_unarchived.decode(encoding=encoding)
+    else:
+        raw_packages_string = raw_packages_unarchived.decode()
     
     raw_packages_list = raw_packages_string.split("\n\n")
     return raw_packages_list
