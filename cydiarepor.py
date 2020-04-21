@@ -12,7 +12,7 @@ import bz2
 import urllib.parse
 import json
 
-__version__ = "0.2.3.1"
+__version__ = "0.2.3.2"
 
 
 DEBUG_FLAG = 0
@@ -22,6 +22,27 @@ def try_int(value):
         return int(value)
     except ValueError:
         return None
+
+def join_url_path_components(base, path):
+    """
+    >>> expected = http://appsec-labs.com/cydia/Packages.bz2
+    >>> join_url_path_components("http://appsec-labs.com/cydia/", "/Packages.bz2") == expected
+    True
+    >>> join_url_path_components("http://appsec-labs.com/cydia/", "Packages.bz2") == expected
+    True
+    >>> join_url_path_components("http://appsec-labs.com/cydia", "Packages.bz2") == expected
+    True
+    >>> join_url_path_components("http://appsec-labs.com/cydia", "/Packages.bz2") == expected
+    True
+    """
+    lhas = base.endswith("/")
+    rhas = path[0] == "/"
+    if lhas and rhas:
+        return base + path[1:]
+    elif lhas or rhas:
+        return base + path
+    else:
+        return base + "/" + path
 
 
 def get_default_cydia_repo_array():
@@ -45,20 +66,15 @@ def get_repo_slugname(repo):
     >>> get_repo_slugname("://build.frida.re")
     build.frida.re
     """
-    assert repo.count("/") >= 2, f"bad repo format for '{repo}'"
-    prefix_free = repo[repo.find("://") + 3:]
-    if prefix_free.count("/") == 0:
-        slugname = prefix_free
-    else:
-        slugname = prefix_free[:prefix_free.find("/")]
-    # print(f"  slug name for {repo} is {slugname}")
-    return slugname
+    parse_result = urllib.parse.urlparse(repo)
+    return parse_result.netloc
 
     
 def handle_old_cydia_repo(url):
     parse_result = urllib.parse.urlparse(url)
     scheme = '{uri.scheme}'.format(uri=parse_result)
     url = url[len(scheme):]
+    scheme = "http://" if not scheme else scheme
     
     old_BigBoss_repo = "://apt.thebigboss.org/repofiles/cydia"
     old_bingner_repo = "://apt.bingner.com"
@@ -66,24 +82,55 @@ def handle_old_cydia_repo(url):
     zip_type = ""
     ret = []
     
-    if url == old_BigBoss_repo:
+    if url.find(old_BigBoss_repo) >= 0:
         repo_package_url = scheme+old_BigBoss_repo + "/dists/stable/main/binary-iphoneos-arm/Packages.bz2"
         zip_type = "bz2"
         ret.append(repo_package_url)
         ret.append(zip_type)
-    elif url == old_bingner_repo:
+    elif url.find(old_bingner_repo) >= 0:
         repo_package_url = scheme+old_bingner_repo + "/dists/ios/1443.00/"+"main/binary-iphoneos-arm/Packages.bz2"
         zip_type = "bz2"
         ret.append(repo_package_url)
         ret.append(zip_type)
     else:
         ret = None
-
-    return ret
     
+    return ret
+
+
+def similar_url_radicals(url1, url2, compare_trailing=False):
+    """
+    """
+    radical_path = lambda url: url[:-1] if url.endswith("/") else url
+    
+    parsed_url1 = urllib.parse.urlparse(url1)
+    parsed_url2 = urllib.parse.urlparse(url2)
+    ## >>> urllib.parse.urlparse("http://appsec-labs.com/cydia/#yosam?fizz=bar&foo=tchi")
+    ## ... ParseResult(scheme='http', netloc='appsec-labs.com', path='/cydia/', params='', query='', fragment='yosam?fizz=bar&foo=tchi')
+    # scheme = '{uri.scheme}'.format(uri=parse_result)
+    if parsed_url1.netloc != parsed_url2.netloc:
+        return False
+    if radical_path(parsed_url1.path) != radical_path(parsed_url2.path):
+        return False
+    
+    if compare_trailing:
+        same_fragment = parsed_url1.fragment == parsed_url2.fragment
+        same_query = parsed_url1.query == parsed_url2.query
+        if not same_fragment or not same_query:
+            return False
+    
+    return True
+
+
 def is_url_reachable(url):
-    r = requests.get(url, allow_redirects = False)
+    # not allowing redirects would prevent auto switching from http to https
+    # r = requests.get(url, allow_redirects = False)
+    #
+    r = requests.get(url, allow_redirects = True)
     status = r.status_code
+    
+    if not similar_url_radicals(r.url, url):
+        return False
     
     if status == 200:
         return True
@@ -167,9 +214,9 @@ def is_malformed_deb_infos(deb):
 
 
 def get_packages_file_from_cydiarepoURL(repoURL):
-    cydiarepo_Packages_URL = repoURL + '/Packages'
-    cydiarepo_Packages_bz2_URL = repoURL + '/Packages.bz2'
-    cydiarepo_Packages_gz_URL = repoURL + '/Packages.gz'
+    cydiarepo_Packages_URL = join_url_path_components(repoURL, '/Packages')
+    cydiarepo_Packages_bz2_URL = join_url_path_components(repoURL, '/Packages.bz2')
+    cydiarepo_Packages_gz_URL = join_url_path_components(repoURL, '/Packages.gz')
     
     if handle_old_cydia_repo(repoURL):
         ret = handle_old_cydia_repo(repoURL)
@@ -198,7 +245,7 @@ def get_packages_file_from_cydiarepoURL(repoURL):
         is_need_unzip = True
         unzip_type = "gz"
     else:
-        print(("[-] {} : did not found Packages or Packages.bz2 or Packages.gz file in this repo, verify it!".format(repoURL)))
+        print(("[-] {} : did not find Packages or Packages.bz2 or Packages.gz file in this repo, verify it!".format(repoURL)))
         exit(1)
 
     resp = requests.get(cydiarepo_reachable_URL)
