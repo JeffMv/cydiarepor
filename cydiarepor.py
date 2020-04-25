@@ -12,7 +12,7 @@ import bz2
 import urllib.parse
 import json
 
-__version__ = "0.2.4.4"
+__version__ = "0.2.5.0"
 
 
 DEBUG_FLAG = 0
@@ -318,7 +318,7 @@ def extract_raw_packages_list_from_content(content):
     return raw_packages_list
 
 
-def get_debs_from_cydiarepoURL(repoURL):
+def get_debs_from_cydiarepoURL(repoURL, from_remote=False):
 #    Package: com.archry.joker
 #    Version: 1.0.30-1+debug
 #    Architecture: iphoneos-arm
@@ -334,7 +334,12 @@ def get_debs_from_cydiarepoURL(repoURL):
 #    Author: @Kgfunn
 #    Depiction: https://joker2gun.github.io/depictions/?p=com.archry.joker
 #    Name: Archery King Hack
-    raw_packages_list = get_raw_packages_list_from_cydiarepoURL(repoURL)
+    filepath = filepath_for_repo_source(repoURL)
+    if os.path.exists(filepath) and not from_remote:
+        with open(filepath) as fh:
+            raw_packages_list = extract_raw_packages_list_from_content(fh.read())
+    else:
+        raw_packages_list = get_raw_packages_list_from_cydiarepoURL(repoURL)
     
     repo_info = {"url":repoURL}
     k_need_item_array = ["Package", "Version", "Filename", "Name", "Description"]
@@ -390,7 +395,7 @@ def get_debs_in_cydia_repos(repo_urls):
     debs_infos = []
     
     for url in repo_urls:
-        debs = get_debs_from_cydiarepoURL(url)
+        debs = get_debs_from_cydiarepoURL(url, False)
         debs_infos += debs
         
     return debs_infos
@@ -534,6 +539,10 @@ def ui_cli_download_user_selected_debs(deb_infos, overwrite, slug_subdir, presel
             print("[+] download deb done")
     pass
 
+
+filepath_for_repo_source = lambda url: os.path.join(SOURCES_DIRECTORY, f"{get_repo_slugname(url)}.Packages")
+
+
 ###########################################################
 
 
@@ -602,7 +611,8 @@ def ArgParser():
     commands_group.add_argument("--addSource", "--updateSource",
                 dest="saveSource",
                 action="store_true",
-                help="Add or update repository source. It will cache the repo")
+                help=("Add or update repository source. It will cache the "
+                      "repo so that it can be reused later."))
     
     #
     parser.add_argument("--nosubdir", "--toroot", "-r",
@@ -660,8 +670,7 @@ if __name__ == "__main__":
         tmp = get_raw_unarchived_packages_file_from_cydiarepoURL(url)
         raw_packages_unarchived, package_file_url, encoding = tmp
         
-        slugname = get_repo_slugname(url)
-        filepath = os.path.join(SOURCES_DIRECTORY, f"{slugname}.Packages")
+        filepath = filepath_for_repo_source(url)
         os.makedirs(os.path.dirname(filepath), exist_ok=True)
         packages_count = '?'
         try:
@@ -692,7 +701,7 @@ if __name__ == "__main__":
         all_repo_debs = []
         
         for url in repos:
-            debs = get_debs_from_cydiarepoURL(url)
+            debs = get_debs_from_cydiarepoURL(url, False)
             filtered_debs = debs
             
             if args.searchstring is not None:
