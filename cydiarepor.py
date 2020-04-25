@@ -514,10 +514,7 @@ def ui_cli_download_user_selected_debs(deb_infos, overwrite, slug_subdir, presel
     
     for num in positions:
         target_deb = deb_infos[num]
-        
-        # print(("[*] you chose {} deb:\"{}\"".format(num, target_deb['Name'])))
-        print(("[*] downloading deb at {}: {}".format(num, target_deb['Name'])))
-        
+        print(("[*] downloading deb at index {}: {}".format(num, target_deb['Name'])))
         cydiarepoURL = deb_infos[num]["repo"]["url"]
         
         if is_empty_deb_file_url(cydiarepoURL, target_deb):
@@ -535,7 +532,8 @@ def ui_cli_download_user_selected_debs(deb_infos, overwrite, slug_subdir, presel
 
 
 def ArgParser():
-    usage = "[usage]: cydiarepor [--list, -s <search_string>] [cydiarepo_url, --defaultrepos]"
+    usage = ("[usage]: cydiarepor [--list, -s <search_string>] "
+             "[cydiarepo_url, --defaultrepos] [-o] [--select]")
     
     prog = "lookup"
     parser = argparse.ArgumentParser(prog=prog,
@@ -568,7 +566,12 @@ def ArgParser():
         )
 
     
-    parser.add_argument("cydiarepo_url", nargs="?", help="")
+    parser.add_argument("cydiarepo_url", nargs="?", 
+                help=("A custom repository you want to process. If the "
+                      "command you use accepts multiple repositories, "
+                      "then the one provided here will be added to those. "
+                      "Otherwise (if the command only accepts 1 repo), this "
+                      "repo will be the only one used."))
     
     commands_group = parser.add_argument_group("Commands")
     commands_group.add_argument("--listdeb", "-l", "--list",
@@ -578,7 +581,8 @@ def ArgParser():
 
     commands_group.add_argument("--searchstring", "--search", "-s", "--string",
                 dest="searchstring",
-                help="search deb by string. You can also pass the empty string '' to filter with the empty string.")
+                help=("search deb by string. You can also pass the empty "
+                      "string '' to filter with the empty string."))
                 
     commands_group.add_argument("--defaultrepos", "-d", "--default",
                 # dest="defaultrepos",
@@ -597,14 +601,19 @@ def ArgParser():
     #
     parser.add_argument("--nosubdir", "--toroot", "-r",
                 action="store_true",
-                help="Place downloaded debs in the root download folder instead of sub directories")
+                help=("Place downloaded debs in the root download folder "
+                      "instead of sub directories"))
     
     parser.add_argument("--overwrite", "-o",
                 action="store_true",
                 help="Force download and overwrite existing deb files")
     
     parser.add_argument("--preselection", "--select",
-                help="Pre-selection for user choices when required.")
+                help=("Pre-selection for user choices when required. Avoids "
+                      "interuptions waiting for user input. You can pass in "
+                      "the index of a package to download with option -s, or "
+                      "you can also use 'all' (without quotes), just like you "
+                      "would do when using the script interactily."))
     
     
     parser.add_argument("--debug",
