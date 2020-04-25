@@ -12,7 +12,7 @@ import bz2
 import urllib.parse
 import json
 
-__version__ = "0.2.5.0"
+__version__ = "0.2.5.1"
 
 
 DEBUG_FLAG = 0
@@ -290,11 +290,9 @@ def get_raw_unarchived_packages_file_from_cydiarepoURL(repoURL):
     tmp = get_packages_file_from_cydiarepoURL(repoURL)
     raw_packages_data, is_need_unzip, unzip_type, cydiarepo_reachable_URL = tmp[:4]
     encoding = tmp[4]
-        
-    if is_need_unzip:
-        # raw_packages_unarchived = unzip_data_to_string(raw_packages_data, unzip_type)
-        # assert raw_packages_unarchived is not None, "Unzip failed"
-        did_uncompress, decoded, zip_type = try_uncompress(raw_packages_data)
+    
+    did_uncompress, decoded, zip_type = try_uncompress(raw_packages_data)
+    if did_uncompress:
         raw_packages_unarchived = decoded
     else:
         raw_packages_unarchived = raw_packages_data
