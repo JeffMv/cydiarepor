@@ -98,6 +98,12 @@ here is the default cydia repo :
 try `python cydiarepor.py -d -l` or `python cydiarepor.py -d -s "Frida"`
 
 
+#### Notes
+
+- Use of HTTP instead of HTTPS: sometimes using a repo with httpS will result in an error, such as with repo httpS://apt.saurik.com/
+    An error message would be printed if there was an error, and in that case you may prefer re-running your command using `http` instead.
+
+
 #### Roadmap
 
 **Done**
@@ -113,7 +119,7 @@ try `python cydiarepor.py -d -l` or `python cydiarepor.py -d -s "Frida"`
     - [X] Updating one source at a time
     - [ ] Updating all sources at once
     - [X] Saving downloaded package files
-    - [ ] Searching from the cached sources
+    - [X] Using the cached sources
 
 
 #### Compatibility
