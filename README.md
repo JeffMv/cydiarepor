@@ -4,7 +4,7 @@ a python cydia repo parse tool to list and search deb to download
 #### List cydia repo
 
 ```shell
-xia0 ~ $ python cydiarepor.py https://xia0z.github.io -l
+$ python cydiarepor.py https://xia0z.github.io -l
 -------------------------------------------------------------------
 | N |           package            |             name             |
 -------------------------------------------------------------------
@@ -22,7 +22,7 @@ xia0 ~ $ python cydiarepor.py https://xia0z.github.io -l
 #### Download deb by given search string
 
 ```shell
-xia0 ~ $ python cydiarepor.py https://xia0z.github.io -s "fk"
+$ python cydiarepor.py https://xia0z.github.io -s "fk"
 -------------------------------------------------------------------
 | N |           package            |             name             |
 -------------------------------------------------------------------
@@ -34,6 +34,50 @@ xia0 ~ $ python cydiarepor.py https://xia0z.github.io -s "fk"
 [*] you choose 0 deb:"fkiqyad"
 [*] start to download:fkiqyad
 [+] download deb done
+```
+
+
+```shell
+# Automation: make it download a preselected result.
+# Passing --preselection 1 will download the middle package without
+# waiting for user input.
+$ python cydiarepor.py https://xia0z.github.io -s "fk" --preselection 1
+-------------------------------------------------------------------
+| N |           package            |             name             |
+-------------------------------------------------------------------
+|0  |       com.xia0.fkiqyad       |           fkiqyad            |
+|1  |     com.xia0.fkwatermark     |         fkwatermark          |
+|2  |     com.xia0.fkwechatzan     |         fkwechatzan          |
+-------------------------------------------------------------------
+[*] start to download:fkwatermark
+[+] download deb done
+```
+
+
+
+#### Automation, Batch & Others
+
+```shell
+# Batch download by passing "all" instead of an index
+$ python cydiarepor.py https://xia0z.github.io -s "fk" --preselection all
+-------------------------------------------------------------------
+| N |           package            |             name             |
+-------------------------------------------------------------------
+|0  |       com.xia0.fkiqyad       |           fkiqyad            |
+|1  |     com.xia0.fkwatermark     |         fkwatermark          |
+|2  |     com.xia0.fkwechatzan     |         fkwechatzan          |
+-------------------------------------------------------------------
+[*] ... # will download all the above packages
+[+] download deb done   
+```
+
+```shell
+# Passing option -s will download packages. Add Batch download all 
+# packages containing "winterboard" in all the default sources + the
+# one specified. By passing "--preselection all", you will not be asked
+# for any input once the command is launched. Thus, you could even integrate
+# it in a whole workflow
+$ python cydiarepor.py https://xia0z.github.io -d -s "fk" --preselection all
 ```
 
 
