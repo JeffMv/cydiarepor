@@ -12,7 +12,7 @@ import bz2
 import urllib.parse
 import json
 
-__version__ = "0.2.4.2"
+__version__ = "0.2.4.3"
 
 
 DEBUG_FLAG = 0
@@ -137,7 +137,24 @@ def is_url_reachable(url):
         return True
     
     return False
+
+
+def try_uncompress(data):
+    zip_type =  None
+    decoded = data
+    did_uncompress = False
     
+    res1, zip_type1 = unzip_data_to_string(data, 'gz'), 'gz'
+    res2, zip_type2 = unzip_data_to_string(data, 'bz2'), 'bz2'
+    
+    if res1 or res2:
+        decoded = res1 if res1 is not None else res2
+        zip_type = zip_type1 if zip_type1 is not None else zip_type2
+        did_uncompress = True
+    
+    return did_uncompress, decoded, zip_type
+
+
 def unzip_data_to_string(data, unzip_type):
     unzip_string = ""
     if unzip_type == "gz":
@@ -151,8 +168,7 @@ def unzip_data_to_string(data, unzip_type):
     elif unzip_type == "bz2":
         unzip_string = bz2.decompress(data)
     else:
-        print("[-] unkown zip type!")
-        exit(1)
+        return None
     
     return unzip_string
     
@@ -270,7 +286,10 @@ def get_raw_unarchived_packages_file_from_cydiarepoURL(repoURL):
     encoding = tmp[4]
         
     if is_need_unzip:
-        raw_packages_unarchived = unzip_data_to_string(raw_packages_data, unzip_type)
+        # raw_packages_unarchived = unzip_data_to_string(raw_packages_data, unzip_type)
+        # assert raw_packages_unarchived is not None, "Unzip failed"
+        did_uncompress, decoded, zip_type = try_uncompress(raw_packages_data)
+        raw_packages_unarchived = decoded
     else:
         raw_packages_unarchived = raw_packages_data
     
