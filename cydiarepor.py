@@ -12,7 +12,7 @@ import bz2
 import urllib.parse
 import json
 
-__version__ = "0.2.5.1"
+__version__ = "0.2.5.2"
 
 
 DEBUG_FLAG = 0
@@ -79,6 +79,7 @@ def handle_old_cydia_repo(url):
     
     old_BigBoss_repo = "://apt.thebigboss.org/repofiles/cydia"
     old_bingner_repo = "://apt.bingner.com"
+    old_Saurik_repo = "://apt.saurik.com"
     repo_package_url = ""
     zip_type = ""
     ret = []
@@ -93,6 +94,13 @@ def handle_old_cydia_repo(url):
         zip_type = "bz2"
         ret.append(repo_package_url)
         ret.append(zip_type)
+    elif url.find(old_Saurik_repo) >= 0:
+        # http://apt.saurik.com/dists/ios/1452.23/main/binary-iphoneos-arm/Packages.bz2
+        repo_package_url = scheme+old_Saurik_repo + "/dists/ios/1452.23/"+"main/binary-iphoneos-arm/Packages.bz2"
+        zip_type = "bz2"
+        ret.append(repo_package_url)
+        ret.append(zip_type)
+        pass
     else:
         ret = None
     
@@ -127,7 +135,13 @@ def is_url_reachable(url):
     # not allowing redirects would prevent auto switching from http to https
     # r = requests.get(url, allow_redirects = False)
     #
-    r = requests.get(url, allow_redirects = True)
+    try:
+        r = requests.get(url, allow_redirects = True)
+    except requests.adapters.SSLError:
+        print(f"SSLError with repo {url}. Please use HTTP instead of HTTPS if there is any issue")
+        assert url.count("https://") <= 1, "URL is probably mistyped"
+        secure_less_url = url.replace("https://", "http://")
+        r = requests.get(secure_less_url, allow_redirects = True)
     status = r.status_code
     
     if not similar_url_radicals(r.url, url):
@@ -280,7 +294,14 @@ def get_packages_file_from_cydiarepoURL(repoURL):
         print(("[-] {} : did not find Packages or Packages.bz2 or Packages.gz file in this repo, verify it!".format(repoURL)))
         exit(1)
 
-    resp = requests.get(cydiarepo_reachable_URL)
+    try:
+        resp = requests.get(cydiarepo_reachable_URL)
+    except requests.adapters.SSLError:
+        # server issue with httpS -> use http
+        print(f"SSLError with repo {cydiarepo_reachable_URL}. Please use HTTP instead of HTTPS if there is any issue")
+        assert url.count("https://") <= 1, "URL is probably mistyped"
+        cydiarepo_reachable_URL = url.replace("https://", "http://")
+        resp = requests.get(cydiarepo_reachable_URL)
     
     raw_packages_data = resp.content
     return raw_packages_data, is_need_unzip, unzip_type, cydiarepo_reachable_URL, resp.encoding
