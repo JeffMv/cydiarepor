@@ -11,8 +11,9 @@ import io
 import bz2
 import urllib.parse
 import json
+import datetime
 
-__version__ = "0.2.5.2"
+__version__ = "0.2.5.3"
 
 
 DEBUG_FLAG = 0
@@ -691,7 +692,7 @@ if __name__ == "__main__":
         
         filepath = filepath_for_repo_source(url)
         os.makedirs(os.path.dirname(filepath), exist_ok=True)
-        packages_count = '?'
+        packages_count = -1
         try:
             if encoding:
                 raw_packages_unarchived = raw_packages_unarchived.decode(encoding=encoding)
@@ -714,6 +715,31 @@ if __name__ == "__main__":
                 print(f"  The repo {slugname} has no package. Please ensure it is configured correctly.")
         finally:
             print(f"  Saved the source file for {url} ({packages_count} packages in the repo).")
+        
+        
+        ### Saving all cached repos in a file.
+        ### It will allow the mimic of cydia's behaviour of updating
+        ### all sources at once
+        fp_repos = os.path.join("sources", "_repositories_.json")
+        try:
+            with open(fp_repos, "r") as fh:
+                repos_infos = json.load(fh)
+        except FileNotFoundError:
+            repos_infos = {}
+        
+        ## do things here to store the curent state of fetched repos
+        repo_key = get_repo_slugname(url)
+        tmp = {
+            "repoRoot": url,
+            "slugname": repo_key,
+            "packagesCount": packages_count,
+            "lastUpdate": str(datetime.datetime.today()),
+        }
+        repo_data = repos_infos.get(repo_key, {})
+        repo_data.update(tmp)
+        repos_infos[repo_key] = repo_data
+        with open(fp_repos, "w") as fh:
+            json.dump(repos_infos, fh, indent=2)
         
         
     elif args.listdeb:

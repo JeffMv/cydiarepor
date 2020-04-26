@@ -1,0 +1,163 @@
+{
+  "http://apt.thebigboss.org/repofiles/cydia/": {
+    "repoRoot": "http://apt.thebigboss.org/repofiles/cydia/",
+    "slugname": "apt.bingner.com",
+    "packagesUrl": "http://apt.thebigboss.org/repofiles/cydia/dists/stable/main/binary-iphoneos-arm/Packages.bz2",
+  },
+  "https://repounclutter.coolstar.org": {
+    "repoRoot": "https://repounclutter.coolstar.org",
+    "slugname": "repounclutter.coolstar.org",
+  },
+  "https://repo.chimera.sh": {
+    "repoRoot": "https://repo.chimera.sh",
+    "slugname": "repo.chimera.sh",
+  },
+  "https://build.frida.re": {
+    "repoRoot": "https://build.frida.re",
+    "slugname": "build.frida.re",
+  },
+  "https://coolstar.org/publicrepo": {
+    "repoRoot": "https://coolstar.org/publicrepo",
+    "slugname": "coolstar.org/publicrepo",
+  },
+  "https://apt.bingner.com": {
+    "repoRoot": "https://apt.bingner.com",
+    "slugname": "apt.bingner.com",
+  },
+  "https://xia0z.github.io": {
+    "repoRoot": "https://xia0z.github.io",
+    "slugname": "xia0z.github.io",
+  },
+  "limneos.net": {
+    "repoRoot": "http://limneos.net/repo/",
+    "slugname": "limneos.net",
+    "packagesCount": 35,
+    "lastUpdate": "2020-04-26 19:43:17.658358",
+  },
+  "rpetri.ch": {
+    "repoRoot": "http://rpetri.ch/repo/",
+    "slugname": "rpetri.ch",
+    "packagesCount": 58,
+    "lastUpdate": "2020-04-26 19:43:17.658358",
+  },
+  "c1d3r.com": {
+    "repoRoot": "http://c1d3r.com/repo/",
+    "slugname": "c1d3r.com",
+    "packagesCount": 32,
+    "lastUpdate": "2020-04-26 19:43:17.658358",
+  },
+  "julioverne.github.io": {
+    "repoRoot": "http://julioverne.github.io/",
+    "slugname": "julioverne.github.io",
+    "packagesCount": 97,
+    "lastUpdate": "2020-04-26 19:43:17.658358",
+  },
+  "repo.packix.com": {
+    "repoRoot": "https://repo.packix.com/",
+    "slugname": "repo.packix.com",
+    "packagesCount": 9201,
+    "lastUpdate": "2020-04-26 19:43:17.658358",
+  },
+  "ramenrepo.github.io": {
+    "repoRoot": "https://ramenrepo.github.io/",
+    "slugname": "ramenrepo.github.io",
+    "packagesCount": 2,
+    "lastUpdate": "2020-04-26 19:43:17.658358",
+  },
+  "cydiageek.yourepo.com": {
+    "repoRoot": "http://cydiageek.yourepo.com/",
+    "slugname": "cydiageek.yourepo.com",
+    "packagesCount": 326,
+    "lastUpdate": "2020-04-26 19:43:17.658358",
+  },
+  "apt.alfhaily.me": {
+    "repoRoot": "http://apt.alfhaily.me/",
+    "slugname": "apt.alfhaily.me",
+    "packagesCount": 6,
+    "lastUpdate": "2020-04-26 19:43:17.658358",
+  },
+  "sparkdev.me": {
+    "repoRoot": "https://sparkdev.me/",
+    "slugname": "sparkdev.me",
+    "packagesCount": 333,
+    "lastUpdate": "2020-04-26 19:43:17.658358",
+  },
+  "beta.unlimapps.com": {
+    "repoRoot": "https://beta.unlimapps.com/",
+    "slugname": "beta.unlimapps.com",
+    "packagesCount": 1662,
+    "lastUpdate": "2020-04-26 19:43:17.658358",
+  },
+  "data.tigisoftware.com": {
+    "repoRoot": "http://data.tigisoftware.com/cydia/",
+    "slugname": "data.tigisoftware.com",
+    "packagesCount": 3,
+    "lastUpdate": "2020-04-26 19:43:17.658358",
+  },
+  "reddestdream.github.io": {
+    "repoRoot": "https://reddestdream.github.io/",
+    "slugname": "reddestdream.github.io",
+    "packagesCount": 2,
+    "lastUpdate": "2020-04-26 19:43:17.658358",
+  },
+  "repo.incendo.ws": {
+    "repoRoot": "https://repo.incendo.ws/",
+    "slugname": "repo.incendo.ws",
+    "packagesCount": 20,
+    "lastUpdate": "2020-04-26 19:43:17.658358",
+  },
+  "cydia.akemi.ai": {
+    "repoRoot": "https://cydia.akemi.ai/",
+    "slugname": "cydia.akemi.ai",
+    "packagesCount": 53,
+    "lastUpdate": "2020-04-26 19:43:17.658358",
+  },
+  "repo.chariz.com": {
+    "repoRoot": "https://repo.chariz.com/",
+    "slugname": "repo.chariz.com",
+    "packagesCount": 66,
+    "lastUpdate": "2020-04-26 19:52:53.254178",
+  },
+  "apt.thebigboss.org": {
+    "repoRoot": "http://apt.thebigboss.org/repofiles/cydia/",
+    "slugname": "apt.thebigboss.org",
+    "packagesCount": -1,
+    "lastUpdate": "2020-04-26 20:06:56.482701",
+  },
+  "repounclutter.coolstar.org": {
+    "repoRoot": "https://repounclutter.coolstar.org",
+    "slugname": "repounclutter.coolstar.org",
+    "packagesCount": 2530,
+    "lastUpdate": "2020-04-26 20:07:16.743058",
+  },
+  "repo.chimera.sh": {
+    "repoRoot": "https://repo.chimera.sh",
+    "slugname": "repo.chimera.sh",
+    "packagesCount": 80,
+    "lastUpdate": "2020-04-26 20:18:47.429165",
+  },
+  "build.frida.re": {
+    "repoRoot": "https://build.frida.re",
+    "slugname": "build.frida.re",
+    "packagesCount": 3,
+    "lastUpdate": "2020-04-26 20:07:21.775556",
+  },
+  "coolstar.org": {
+    "repoRoot": "https://coolstar.org/publicrepo",
+    "slugname": "coolstar.org",
+    "packagesCount": 18,
+    "lastUpdate": "2020-04-26 20:07:23.390610",
+  },
+  "apt.bingner.com": {
+    "repoRoot": "https://apt.bingner.com",
+    "slugname": "apt.bingner.com",
+    "packagesCount": 383,
+    "lastUpdate": "2020-04-26 20:07:37.732585",
+  },
+  "xia0z.github.io": {
+    "repoRoot": "https://xia0z.github.io",
+    "slugname": "xia0z.github.io",
+    "packagesCount": 13,
+    "lastUpdate": "2020-04-26 20:07:42.653943",
+  }
+}
