@@ -338,7 +338,7 @@ def extract_raw_packages_list_from_content(content):
     return raw_packages_list
 
 
-def get_debs_from_cydiarepoURL(repoURL, from_remote=False):
+def get_debs_from_cydiarepo(repoURL, from_remote=False):
 #    Package: com.archry.joker
 #    Version: 1.0.30-1+debug
 #    Architecture: iphoneos-arm
@@ -415,7 +415,7 @@ def get_debs_in_cydia_repos(repo_urls):
     debs_infos = []
     
     for url in repo_urls:
-        debs = get_debs_from_cydiarepoURL(url, False)
+        debs = get_debs_from_cydiarepo(url, False)
         debs_infos += debs
         
     return debs_infos
@@ -694,7 +694,9 @@ if __name__ == "__main__":
         os.makedirs(os.path.dirname(filepath), exist_ok=True)
         packages_count = -1
         try:
-            if encoding:
+            if isinstance(raw_packages_unarchived, str):
+                pass
+            elif encoding:
                 raw_packages_unarchived = raw_packages_unarchived.decode(encoding=encoding)
             else:
                 raw_packages_unarchived = raw_packages_unarchived.decode()
@@ -746,7 +748,7 @@ if __name__ == "__main__":
         all_repo_debs = []
         
         for url in repos:
-            debs = get_debs_from_cydiarepoURL(url, False)
+            debs = get_debs_from_cydiarepo(url, False)
             filtered_debs = debs
             
             if args.searchstring is not None:

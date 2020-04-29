@@ -1,41 +1,4 @@
 {
-  "http://apt.thebigboss.org/repofiles/cydia/": {
-    "repoRoot": "http://apt.thebigboss.org/repofiles/cydia/",
-    "slugname": "apt.bingner.com",
-    "packagesUrl": "http://apt.thebigboss.org/repofiles/cydia/dists/stable/main/binary-iphoneos-arm/Packages.bz2",
-    "usesDebian": true,
-    "packagesCount": null
-  },
-  "https://repounclutter.coolstar.org": {
-    "repoRoot": "https://repounclutter.coolstar.org",
-    "slugname": "repounclutter.coolstar.org",
-    "packagesUrl": null
-  },
-  "https://repo.chimera.sh": {
-    "repoRoot": "https://repo.chimera.sh",
-    "slugname": "repo.chimera.sh",
-    "packagesUrl": null
-  },
-  "https://build.frida.re": {
-    "repoRoot": "https://build.frida.re",
-    "slugname": "build.frida.re",
-    "packagesUrl": null
-  },
-  "https://coolstar.org/publicrepo": {
-    "repoRoot": "https://coolstar.org/publicrepo",
-    "slugname": "coolstar.org/publicrepo",
-    "packagesUrl": null
-  },
-  "https://apt.bingner.com": {
-    "repoRoot": "https://apt.bingner.com",
-    "slugname": "apt.bingner.com",
-    "packagesUrl": null
-  },
-  "https://xia0z.github.io": {
-    "repoRoot": "https://xia0z.github.io",
-    "slugname": "xia0z.github.io",
-    "packagesUrl": null
-  },
   "limneos.net": {
     "repoRoot": "http://limneos.net/repo/",
     "slugname": "limneos.net",
