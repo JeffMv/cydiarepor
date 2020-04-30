@@ -686,62 +686,63 @@ if __name__ == "__main__":
     
     
     if args.saveSource:
-        url = args.cydiarepo_url
-        tmp = get_raw_unarchived_packages_file_from_cydiarepoURL(url)
-        raw_packages_unarchived, package_file_url, encoding = tmp
-        
-        filepath = filepath_for_repo_source(url)
-        os.makedirs(os.path.dirname(filepath), exist_ok=True)
-        packages_count = -1
-        try:
-            if isinstance(raw_packages_unarchived, str):
-                pass
-            elif encoding:
-                raw_packages_unarchived = raw_packages_unarchived.decode(encoding=encoding)
+        for url in repos:
+        # url = args.cydiarepo_url
+            tmp = get_raw_unarchived_packages_file_from_cydiarepoURL(url)
+            raw_packages_unarchived, package_file_url, encoding = tmp
+            
+            filepath = filepath_for_repo_source(url)
+            os.makedirs(os.path.dirname(filepath), exist_ok=True)
+            packages_count = -1
+            try:
+                if isinstance(raw_packages_unarchived, str):
+                    pass
+                elif encoding:
+                    raw_packages_unarchived = raw_packages_unarchived.decode(encoding=encoding)
+                else:
+                    raw_packages_unarchived = raw_packages_unarchived.decode()
+                
+                with open(filepath, "w") as fh:
+                    fh.write(raw_packages_unarchived)
+                
+            except UnicodeDecodeError:
+                # better caching something even if it can't be decoded than nothing
+                with open(filepath, "wb") as fh:
+                    fh.write(raw_packages_unarchived)
+                print(f"  Encoding of repo {url} could not be found. Saving as is...")
             else:
-                raw_packages_unarchived = raw_packages_unarchived.decode()
+                packages = extract_raw_packages_list_from_content(raw_packages_unarchived)
+                packages = list(filter(lambda p: len(p.strip()) > 0, packages))
+                packages_count = len(packages)
+                if len(packages) == 0:
+                    print(f"  The repo {slugname} has no package. Please ensure it is configured correctly.")
+            finally:
+                print(f"  Saved the source file for {url} ({packages_count} packages in the repo).")
             
-            with open(filepath, "w") as fh:
-                fh.write(raw_packages_unarchived)
             
-        except UnicodeDecodeError:
-            # better caching something even if it can't be decoded than nothing
-            with open(filepath, "wb") as fh:
-                fh.write(raw_packages_unarchived)
-            print(f"  Encoding of repo {url} could not be found. Saving as is...")
-        else:
-            packages = extract_raw_packages_list_from_content(raw_packages_unarchived)
-            packages = list(filter(lambda p: len(p.strip()) > 0, packages))
-            packages_count = len(packages)
-            if len(packages) == 0:
-                print(f"  The repo {slugname} has no package. Please ensure it is configured correctly.")
-        finally:
-            print(f"  Saved the source file for {url} ({packages_count} packages in the repo).")
-        
-        
-        ### Saving all cached repos in a file.
-        ### It will allow the mimic of cydia's behaviour of updating
-        ### all sources at once
-        fp_repos = os.path.join("sources", "_repositories_.json")
-        try:
-            with open(fp_repos, "r") as fh:
-                repos_infos = json.load(fh)
-        except FileNotFoundError:
-            repos_infos = {}
-        
-        ## do things here to store the curent state of fetched repos
-        repo_key = get_repo_slugname(url)
-        tmp = {
-            "repoRoot": url,
-            "slugname": repo_key,
-            "packagesCount": packages_count,
-            "lastUpdate": str(datetime.datetime.today()),
-        }
-        repo_data = repos_infos.get(repo_key, {})
-        repo_data.update(tmp)
-        repos_infos[repo_key] = repo_data
-        with open(fp_repos, "w") as fh:
-            json.dump(repos_infos, fh, indent=2)
+            ### Saving all cached repos in a file.
+            ### It will allow the mimic of cydia's behaviour of updating
+            ### all sources at once
+            fp_repos = os.path.join("sources", "_repositories_.json")
+            try:
+                with open(fp_repos, "r") as fh:
+                    repos_infos = json.load(fh)
+            except FileNotFoundError:
+                repos_infos = {}
+            
+            ## do things here to store the curent state of fetched repos
+            repo_key = get_repo_slugname(url)
+            tmp = {
+                "repoRoot": url,
+                "slugname": repo_key,
+                "packagesCount": packages_count,
+                "lastUpdate": str(datetime.datetime.today()),
+            }
+            repo_data = repos_infos.get(repo_key, {})
+            repo_data.update(tmp)
+            repos_infos[repo_key] = repo_data
+            with open(fp_repos, "w") as fh:
+                json.dump(repos_infos, fh, indent=2)
         
         
     elif args.listdeb:
