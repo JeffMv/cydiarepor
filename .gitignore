@@ -1,3 +1,5 @@
 downloads/
-backup-repos/*/*.deb
 logs/
+
+backup-repos/*/*.deb
+sources/*.Packages
