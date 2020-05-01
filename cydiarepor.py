@@ -13,7 +13,7 @@ import urllib.parse
 import json
 import datetime
 
-__version__ = "0.2.5.3"
+__version__ = "0.2.5.5"
 
 
 DEBUG_FLAG = 0
@@ -255,6 +255,56 @@ def is_malformed_deb_infos(deb):
     return len(valid_fields) == 0
 
 
+def get_cydiarepo_reachable_url(repoURL):
+    # cydiarepo_Packages_URL = repoURL + '/Packages'
+    # cydiarepo_Packages_bz2_URL = repoURL + '/Packages.bz2'
+    # cydiarepo_Packages_gz_URL = repoURL + '/Packages.gz'
+    # print(f"cydiarepo_Packages_URL: {cydiarepo_Packages_URL}")
+    cydiarepo_Packages_URL = join_url_path_components(repoURL, '/Packages')
+    cydiarepo_Packages_bz2_URL = join_url_path_components(repoURL, '/Packages.bz2')
+    cydiarepo_Packages_gz_URL = join_url_path_components(repoURL, '/Packages.gz')
+    # print(f"cydiarepo_Packages_URL: {cydiarepo_Packages_URL}")
+    
+    cydiarepo_reachable_URL = None
+    usesDebian = None
+    
+    if handle_old_cydia_repo(repoURL):
+        ret = handle_old_cydia_repo(repoURL)
+        zip_type = ret[1]
+        if zip_type == "gz":
+            cydiarepo_Packages_gz_URL = ret[0]
+            usesDebian = True
+        elif zip_type == "bz2":
+            cydiarepo_Packages_bz2_URL = ret[0]
+            usesDebian = True
+        else:
+            # print("[-] unknown old cydia repo zip type")
+            # exit(1)
+            return cydiarepo_reachable_URL, usesDebian
+    
+    is_need_unzip = False
+    unzip_type = ''
+    
+    usesDebian = usesDebian if usesDebian is True else False
+    if is_url_reachable(cydiarepo_Packages_URL):
+        cydiarepo_reachable_URL = cydiarepo_Packages_URL
+    elif is_url_reachable(cydiarepo_Packages_bz2_URL):
+        cydiarepo_reachable_URL = cydiarepo_Packages_bz2_URL
+        is_need_unzip = True
+        unzip_type = "bz2"
+        
+    elif is_url_reachable(cydiarepo_Packages_gz_URL):
+        cydiarepo_reachable_URL = cydiarepo_Packages_gz_URL
+        is_need_unzip = True
+        unzip_type = "gz"
+    else:
+        # print(("[-] {} : did not find Packages or Packages.bz2 or Packages.gz file in this repo, verify it!".format(repoURL)))
+        # exit(1)
+        return cydiarepo_reachable_URL, None
+        pass
+    return cydiarepo_reachable_URL, usesDebian
+
+
 def get_packages_file_from_cydiarepoURL(repoURL):
     # cydiarepo_Packages_URL = repoURL + '/Packages'
     # cydiarepo_Packages_bz2_URL = repoURL + '/Packages.bz2'
@@ -376,7 +426,7 @@ def get_debs_from_cydiarepo(repoURL, from_remote=False):
         
         if DEBUG_FLAG >= 2:
             print(f"{'='*60}\n>> raw_package_string\n{raw_package_string}")
-            print(f"{'-'*60}\nparsed package string\n{json.dumps(parse_raw_deb_info_string(raw_package_string), indent=2)}")
+            print(f"{'-'*60}\nparsed package string\n{json.dumps(reference_info_deb, indent=2)}")
         
         for raw_deb_str in raw_deb_list:
             deb_item = raw_deb_str.split(":")
@@ -732,13 +782,21 @@ if __name__ == "__main__":
             
             ## do things here to store the curent state of fetched repos
             repo_key = get_repo_slugname(url)
+            
+            repo_data = repos_infos.get(repo_key, {})
+            packagesUrl, usesDebian = repo_data.get("packagesUrl"), repo_data.get("usesDebian")
+            if not packagesUrl or usesDebian is None:
+                # can take time to reach out for resources so do only if needed
+                packagesUrl, usesDebian = get_cydiarepo_reachable_url(url)
+            
             tmp = {
                 "repoRoot": url,
                 "slugname": repo_key,
                 "packagesCount": packages_count,
                 "lastUpdate": str(datetime.datetime.today()),
+                "packagesUrl": packagesUrl,
+                "usesDebian": usesDebian,
             }
-            repo_data = repos_infos.get(repo_key, {})
             repo_data.update(tmp)
             repos_infos[repo_key] = repo_data
             with open(fp_repos, "w") as fh:
