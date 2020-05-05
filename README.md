@@ -71,12 +71,20 @@ $ python cydiarepor.py https://xia0z.github.io -s "fk" --preselection all
 [+] download deb done   
 ```
 
+**Example command explained**
+
 ```shell
-# Passing option -s will download packages. Add Batch download all 
-# packages containing "winterboard" in all the default sources + the
-# one specified. By passing "--preselection all", you will not be asked
-# for any input once the command is launched. Thus, you could even integrate
-# it in a whole workflow
+# - Passing option -s will try to download packages containing "fk".
+#     If you want to display all the packages, you can pass -s ''
+#     since every package contains the empty string.
+# - Option -d will use default sources to search for deb packages
+# - The specified source (https://xia0z.github.io) will be parsed too
+# - By passing "--preselection <an_index>", you will not be asked
+#     for any input once the command is launched, and the package at
+#     the selected index will be downloaded.
+#     Thus, you could even integrate it in a script or other workflow.
+#     Passing "all" to "--preselection" will download all the packages
+#     matching the search term -s.
 $ python cydiarepor.py https://xia0z.github.io -d -s "fk" --preselection all
 ```
 
