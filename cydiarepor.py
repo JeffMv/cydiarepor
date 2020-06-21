@@ -688,11 +688,18 @@ def ArgParser():
                 dest="searchstring",
                 help=("search deb by string. You can also pass the empty "
                       "string '' to filter with the empty string."))
-                
+    
     commands_group.add_argument("--defaultrepos", "-d", "--default",
                 # dest="defaultrepos",
                 action="store_true",
                 help="Use default repos instead of a specific one")
+    
+    commands_group.add_argument("--otherrepos",
+                nargs="+", default=[],
+                # dest="defaultrepos",
+                # action="store_true",
+                help=("Custom repositories. Use this option when you can "
+                      "specify multiple repos and not just one."))
     
     commands_group.add_argument("--checkpackageuri", "--check",
                 action="store_true",
@@ -750,6 +757,7 @@ if __name__ == "__main__":
         exit()
     
     repos = [args.cydiarepo_url] if args.cydiarepo_url else []
+    repos += args.otherrepos
     repos += get_default_cydia_repo_array() if args.defaultrepos else []
     
     assert len(repos) >= 1, f"You should either provide a repo or use the default repos options"
@@ -826,6 +834,7 @@ if __name__ == "__main__":
             repos_infos[repo_key] = repo_data
             with open(fp_repos, "w") as fh:
                 json.dump(repos_infos, fh, indent=2)
+                print(f"Persisted the sources data to {fp_repos}")
         
         
     elif args.listdeb:
