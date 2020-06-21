@@ -25,6 +25,22 @@ def try_int(value):
     except ValueError:
         return None
 
+
+def try_decode_using_encodings(content, encodings):
+    decoded = False
+    remaining = encodings.copy()
+    result = None
+    encoding = None
+    while not decoded and len(remaining) > 0:
+        try:
+            encoding = remaining.pop(0)
+            result = content.decode(encoding=encoding)
+            decoded = True
+        except UnicodeDecodeError:
+            pass
+    return result, encoding
+
+
 def join_url_path_components(base, path):
     """
     >>> expected = http://appsec-labs.com/cydia/Packages.bz2
@@ -634,16 +650,19 @@ def ArgParser():
         # same as above, but prints only those containing "terminal" #
         $ {prog} --listdeb https://build.frida.re -s terminal
         
-        ## Download
+        ###   Download   ###
         # search packages containing "terminal" in the single provided repos #
         $ {prog} -s terminal  https://build.frida.re
         # same as above but searching also in all the default repos #
         $ {prog} -s terminal  https://build.frida.re --defaultrepos
+        # same as above but no confirmation asked before downloading at index 3 (i.e. position 4) #
+        $ {prog} -s terminal  https://build.frida.re --defaultrepos --preselection 3
         
-        ## infos
+        ###   infos   ###
         # prints default sources #
         $ {prog} --defaultrepos
         
+        ### DEPRECATED ###
         # Checks for invalid deb filenames among the search results yielded #
         # by the search term <some_term>. #
         # Note: the initial issue was fixed so this option is no more useful. #
@@ -751,7 +770,10 @@ if __name__ == "__main__":
                 elif encoding:
                     raw_packages_unarchived = raw_packages_unarchived.decode(encoding=encoding)
                 else:
-                    raw_packages_unarchived = raw_packages_unarchived.decode()
+                    encodings = ['utf-8', 'iso-8859-1']
+                    raw_packages_unarchived, encoding = try_decode_using_encodings(raw_packages_unarchived, encodings)
+                    if encoding is None:
+                        raw_packages_unarchived = raw_packages_unarchived.decode()
                 
                 with open(filepath, "w") as fh:
                     fh.write(raw_packages_unarchived)
@@ -786,6 +808,7 @@ if __name__ == "__main__":
             
             repo_data = repos_infos.get(repo_key, {})
             packagesUrl, usesDebian = repo_data.get("packagesUrl"), repo_data.get("usesDebian")
+            encoding = encoding if encoding else repo_data.get("encoding", None)
             if not packagesUrl or usesDebian is None:
                 # can take time to reach out for resources so do only if needed
                 packagesUrl, usesDebian = get_cydiarepo_reachable_url(url)
@@ -796,6 +819,7 @@ if __name__ == "__main__":
                 "packagesCount": packages_count,
                 "lastUpdate": str(datetime.datetime.today()),
                 "packagesUrl": packagesUrl,
+                "encoding": encoding,
                 "usesDebian": usesDebian,
             }
             repo_data.update(tmp)

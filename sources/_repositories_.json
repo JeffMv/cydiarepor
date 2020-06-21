@@ -122,9 +122,10 @@
   "apt.thebigboss.org": {
     "repoRoot": "http://apt.thebigboss.org/repofiles/cydia/",
     "slugname": "apt.thebigboss.org",
-    "packagesCount": -1,
-    "lastUpdate": "2020-05-01 22:03:59.448482",
+    "packagesCount": 9574,
+    "lastUpdate": "2020-06-21 18:52:13.201663",
     "packagesUrl": "http://apt.thebigboss.org/repofiles/cydia/dists/stable/main/binary-iphoneos-arm/Packages.bz2",
+    "encoding": "iso-8859-1",
     "usesDebian": true
   },
   "repounclutter.coolstar.org": {
@@ -138,10 +139,11 @@
   "repo.chimera.sh": {
     "repoRoot": "https://repo.chimera.sh",
     "slugname": "repo.chimera.sh",
-    "packagesCount": 79,
-    "lastUpdate": "2020-05-01 22:04:27.221642",
+    "packagesCount": 78,
+    "lastUpdate": "2020-06-21 18:52:47.765950",
     "packagesUrl": "https://repo.chimera.sh/Packages",
-    "usesDebian": false
+    "usesDebian": false,
+    "encoding": "utf-8"
   },
   "build.frida.re": {
     "repoRoot": "https://build.frida.re",
@@ -182,5 +184,14 @@
     "lastUpdate": "2020-05-01 22:05:07.124707",
     "packagesUrl": "http://ib-soft.net/cydia/beta/Packages.bz2",
     "usesDebian": false
+  },
+  "getdelta.co": {
+    "repoRoot": "http://getdelta.co/",
+    "slugname": "getdelta.co",
+    "packagesCount": 3,
+    "lastUpdate": "2020-06-21 18:54:47.781475",
+    "packagesUrl": "http://getdelta.co/Packages.gz",
+    "usesDebian": false,
+    "encoding": "utf-8"
   }
 }

@@ -3,3 +3,5 @@ logs/
 
 backup-repos/*/*.deb
 sources/*.Packages
+sources/tmp/
+tmp/
