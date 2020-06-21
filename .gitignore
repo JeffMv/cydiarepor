@@ -5,3 +5,4 @@ backup-repos/*/*.deb
 sources/*.Packages
 sources/tmp/
 tmp/
+sources/README.md
