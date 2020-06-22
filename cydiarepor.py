@@ -512,7 +512,7 @@ def is_empty_deb_file_url(repo_url, deb):
     # instead of a real deb file url like:
     # https://apt.bingner.com/./debs/1443.00/coreutils_8.31-1_iphoneos-arm.deb
     url = url_deb_file(repo_url, deb)
-    return url == repo_url + "/./"
+    return (url == repo_url + "/./") or url.split('?')[0].endswith('/')
 
 
 def download_deb_file(repo_url, deb, overwrite=False, slug_subdir=True):
@@ -667,6 +667,9 @@ def ArgParser():
         # by the search term <some_term>. #
         # Note: the initial issue was fixed so this option is no more useful. #
         $ {prog} --check https://build.frida.re -s <some_term>
+        # check for invalid package URLs in the default repos #
+        # if prog -s is not provided, it will inspect all the packages #
+        $ {prog} --check -d [-s <filter_term>]
         """
         )
 
@@ -703,7 +706,7 @@ def ArgParser():
     
     commands_group.add_argument("--checkpackageuri", "--check",
                 action="store_true",
-                help="Prints default repo sources")
+                help="Checks the urls of (selected) packages (of selected repos) and shows invalid / missing packages.")
     
     commands_group.add_argument("--addSource", "--updateSource",
                 dest="saveSource",
@@ -855,17 +858,23 @@ if __name__ == "__main__":
         list_all_repo_deb(all_repo_debs)
         # exit(0)
     
-    elif args.searchstring is not None:
+    elif args.searchstring is not None or args.checkpackageuri:
         requested_debs = []
         
         debs = get_debs_in_cydia_repos(repos)
-        for deb in debs:
-            if is_need_by_search_string(deb, args.searchstring):  # and not is_malformed_deb_infos(deb):
-                requested_debs.append(deb)
+        if args.searchstring:
+            ## filtering based on search term
+            for deb in debs:
+                if is_need_by_search_string(deb, args.searchstring):  # and not is_malformed_deb_infos(deb):
+                    requested_debs.append(deb)
+        else:
+            requested_debs = debs
         
-        if args.checkpackageuri and args.cydiarepo_url:
+        if args.checkpackageuri:
             # only check invalid urls
-            invalid_debs = [target_deb for target_deb in requested_debs if is_empty_deb_file_url(args.cydiarepo_url, target_deb)]
+            print("Checking packages of repos to see if there are any invalid URLs...")
+            foo_repo_url = args.cydiarepo_url if args.cydiarepo_url else repos[0]
+            invalid_debs = [target_deb for target_deb in requested_debs if is_empty_deb_file_url(foo_repo_url, target_deb)]
             if invalid_debs:
                 print(f"\n\n{'-' * 60}\n\n".join(map(lambda x:json.dumps(x, indent=2), invalid_debs)))
             else:
