@@ -12,8 +12,9 @@ import bz2
 import urllib.parse
 import json
 import datetime
+import math
 
-__version__ = "0.2.5.5"
+__version__ = "0.2.6.0"
 
 
 DEBUG_FLAG = 0
@@ -515,26 +516,40 @@ def is_empty_deb_file_url(repo_url, deb):
     return (url == repo_url + "/./") or url.split('?')[0].endswith('/')
 
 
+def savepath_for_deb(repo_url, deb, slug_subdir):
+    """
+    :param bool slug_subdir: whether it should create subfolders in downloads
+                    directory or not. Subfolders would be named after the repo
+    """
+    fname = deb['Package'] + "_"+ deb['Version'] + ".deb"    
+    # dest = "."
+    dest = "downloads"
+    dest = os.path.join(dest, (get_repo_slugname(repo_url) if slug_subdir else ''))
+    savepath = os.path.join(dest, fname)
+    return savepath
+
+
 def download_deb_file(repo_url, deb, overwrite=False, slug_subdir=True):
     """
+    :param str repo_url:
+    :param bool overwrite:
+    :param bool slug_subdir: whether it should create subfolders in downloads
+                    directory or not. Subfolders would be named after the repo
     :return: whether the resource was fetched
     """
     deb_download_url = repo_url + "/./" + deb['Filename']
     print(f"    {deb_download_url}")
     fname = deb['Package'] + "_"+ deb['Version'] + ".deb"    
-    # dest = "."
-    dest = "downloads"
-    dest = os.path.join(dest, get_repo_slugname(repo_url)) if slug_subdir else dest
-    save_path = os.path.join(dest, fname)
+    filepath = savepath_for_deb(repo_url, deb, slug_subdir)
     
-    if overwrite or not os.path.exists(save_path):
+    if overwrite or not os.path.exists(filepath):
         r = http_get(deb_download_url)
         deb_data = r.content
         
-        os.makedirs(dest, exist_ok=True)
-        with open(save_path, 'wb') as f:
+        os.makedirs(os.path.dirname(filepath), exist_ok=True)
+        with open(filepath, 'wb') as f:
             f.write(deb_data)
-#       wget.download(deb_download_url, save_path)
+#       wget.download(deb_download_url, filepath)
         return False
     else:
         return True
@@ -605,14 +620,20 @@ def ui_cli_download_user_selected_debs(deb_infos, overwrite, slug_subdir, presel
     
     if desired_deb_indexes.lower() == "all":
         positions = range(len(deb_infos))
-        print(f"Going to download all {len(deb_infos)} deb files")
+        print(f"Requested all {len(deb_infos)} deb files")
     else:
         positions = [try_int(pos) for pos in desired_deb_indexes.split(" ") if try_int(pos)]
     
-    for num in positions:
-        target_deb = deb_infos[num]
-        print(("[*] downloading deb at index {}: {}".format(num, target_deb['Name'])))
-        cydiarepoURL = deb_infos[num]["repo"]["url"]
+    packagesInfos = {num: {"url":deb_infos[num]["repo"]["url"], "index":i, "pos":num, "deb":deb_infos[num], "path":savepath_for_deb(deb_infos[num]["repo"]["url"], deb_infos[num], slug_subdir)} for i, num in enumerate(positions)}
+    remainingToFetch = {key:packagesInfos[key] for key in packagesInfos if overwrite or not os.path.exists(packagesInfos[key]["path"])}
+    print(f"{len(remainingToFetch)} debs to fetch among the {len(deb_infos)}")
+    
+    _nleading_zeros = str(int(math.ceil(math.log(len(remainingToFetch), 10))))
+    for k, key in enumerate(remainingToFetch):
+        num = remainingToFetch[key]["pos"]
+        target_deb = remainingToFetch[key]["deb"]
+        print((("[*] {:0"+_nleading_zeros+"}/{} downloading deb at index {}: {}").format(k+1, len(remainingToFetch), num, target_deb['Name'])))
+        cydiarepoURL = remainingToFetch[key]["url"]
         
         if is_empty_deb_file_url(cydiarepoURL, target_deb):
             print(f"    Empty url for deb {target_deb['Name']}:\n    {target_deb}\n")
@@ -837,7 +858,6 @@ if __name__ == "__main__":
             repos_infos[repo_key] = repo_data
             with open(fp_repos, "w") as fh:
                 json.dump(repos_infos, fh, indent=2)
-                print(f"Persisted the sources data to {fp_repos}")
         
         
     elif args.listdeb:
