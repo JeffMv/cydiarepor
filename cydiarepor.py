@@ -628,7 +628,7 @@ def ui_cli_download_user_selected_debs(deb_infos, overwrite, slug_subdir, presel
     remainingToFetch = {key:packagesInfos[key] for key in packagesInfos if overwrite or not os.path.exists(packagesInfos[key]["path"])}
     print(f"{len(remainingToFetch)} debs to fetch among the {len(deb_infos)}")
     
-    _nleading_zeros = str(int(math.ceil(math.log(len(remainingToFetch), 10))))
+    _nleading_zeros = str(int(math.ceil(math.log(len(remainingToFetch), 10)))) if len(remainingToFetch) > 0 else 0
     for k, key in enumerate(remainingToFetch):
         num = remainingToFetch[key]["pos"]
         target_deb = remainingToFetch[key]["deb"]
